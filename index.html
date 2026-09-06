@@ -33,23 +33,22 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     
-    /* Scrollbar personalizada para navegador (Chrome, Edge, Safari) */
+    /* Scrollbar personalizada oscura */
     ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
+      width: 10px;
+      height: 10px;
     }
     ::-webkit-scrollbar-track {
       background: #050505;
     }
     ::-webkit-scrollbar-thumb {
       background: #1f241d;
-      border-radius: 4px;
+      border-radius: 5px;
     }
     ::-webkit-scrollbar-thumb:hover {
       background: var(--green-primary);
     }
 
-    /* Scrollbar para Firefox */
     * {
       scrollbar-width: thin;
       scrollbar-color: #1f241d #050505;
@@ -60,56 +59,73 @@
       background-color: var(--bg-dark); 
       color: var(--text-main); 
       line-height: 1.5; 
-      padding: 20px 15px; 
+      padding: 15px 25px; 
     }
 
-    .container { max-width: 1280px; margin: 0 auto; }
+    /* Agrandado el contenedor para ocupar casi toda la pantalla */
+    .container { 
+      width: 96%; 
+      max-width: 1750px; 
+      margin: 0 auto; 
+    }
 
     /* Header */
-    header { text-align: center; margin-bottom: 30px; }
+    header { text-align: center; margin-bottom: 25px; }
     header h1 { 
-      font-size: 2.3rem; 
-      font-weight: 700; 
+      font-size: 2.6rem; 
+      font-weight: 800; 
       letter-spacing: -0.02em; 
       background: linear-gradient(to right, #00ff66, #10b981); 
       -webkit-background-clip: text; 
       -webkit-text-fill-color: transparent; 
     }
-    header p { color: var(--text-muted); font-size: 0.95rem; margin-top: 6px; }
+    header p { color: var(--text-muted); font-size: 1rem; margin-top: 4px; }
 
     /* Search & Filters */
-    .filter-bar { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+    .filter-bar { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
     .search-input, .select-filter { 
       background: var(--card-bg); 
       border: 1px solid var(--card-border); 
       color: var(--text-main); 
-      padding: 12px 16px; 
-      border-radius: 8px; 
-      font-size: 0.95rem; 
+      padding: 14px 18px; 
+      border-radius: 10px; 
+      font-size: 1rem; 
       outline: none; 
       transition: all 0.2s; 
     }
-    .search-input { flex: 2; min-width: 240px; }
-    .select-filter { flex: 1; min-width: 180px; cursor: pointer; }
+    .search-input { flex: 3; min-width: 280px; }
+    .select-filter { flex: 1; min-width: 220px; cursor: pointer; }
     .search-input:focus, .select-filter:focus { 
       border-color: var(--green-bright); 
-      box-shadow: 0 0 10px rgba(0, 255, 102, 0.25); 
+      box-shadow: 0 0 12px rgba(0, 255, 102, 0.25); 
     }
 
-    /* Main Grid Layout - Ampliado horizontalmente la columna de la lista (2.2fr) */
-    .dashboard-grid { display: grid; grid-template-columns: 2.2fr 1fr; gap: 24px; }
-    @media (max-width: 950px) { .dashboard-grid { grid-template-columns: 1fr; } }
+    /* Main Grid Layout - Distribución más amplia */
+    .dashboard-grid { 
+      display: grid; 
+      grid-template-columns: 1fr 380px; 
+      gap: 25px; 
+    }
+    @media (max-width: 1100px) { 
+      .dashboard-grid { grid-template-columns: 1fr; } 
+    }
 
     /* Item Grid Container */
-    .items-container { max-height: 700px; overflow-y: auto; padding-right: 8px; }
-    .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 12px; }
+    .items-container { max-height: 780px; overflow-y: auto; padding-right: 10px; }
+    
+    /* Cuadrícula de ítems con tamaño aumentado */
+    .items-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); 
+      gap: 16px; 
+    }
 
-    /* Tarjeta individual de ítem */
+    /* Tarjetas individuales de ítem más grandes */
     .item-card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
-      border-radius: 10px;
-      padding: 12px 8px;
+      border-radius: 12px;
+      padding: 16px 12px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -118,46 +134,56 @@
       transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     }
     .item-card:hover { 
-      transform: translateY(-3px); 
+      transform: translateY(-4px); 
       border-color: var(--green-bright); 
-      box-shadow: 0 4px 15px rgba(0, 255, 102, 0.15);
+      box-shadow: 0 6px 20px rgba(0, 255, 102, 0.18);
     }
 
+    /* Imagen más grande */
     .item-card img {
-      width: 60px;
-      height: 60px;
+      width: 85px;
+      height: 85px;
       object-fit: contain;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
     .item-card .item-name {
-      font-size: 0.85rem;
-      font-weight: 600;
+      font-size: 0.95rem;
+      font-weight: 700;
       color: #fff;
-      margin-bottom: 4px;
-      line-height: 1.2;
+      margin-bottom: 6px;
+      line-height: 1.25;
       word-break: break-word;
     }
 
     .item-card .item-price {
-      font-size: 0.85rem;
-      font-weight: 700;
+      font-size: 1rem;
+      font-weight: 800;
       color: var(--green-bright);
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
 
     .item-card .badge {
-      font-size: 0.7rem;
-      padding: 2px 6px;
-      border-radius: 4px;
-      background: rgba(255,255,255,0.05);
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.06);
       color: var(--text-muted);
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
 
-    /* Action Buttons */
-    .btn-group { display: flex; gap: 4px; width: 100%; }
-    .btn-add { flex: 1; border: none; padding: 6px 0; border-radius: 6px; font-weight: 700; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
+    /* Action Buttons más grandes y legibles */
+    .btn-group { display: flex; gap: 6px; width: 100%; }
+    .btn-add { 
+      flex: 1; 
+      border: none; 
+      padding: 8px 0; 
+      border-radius: 8px; 
+      font-weight: 700; 
+      font-size: 0.82rem; 
+      cursor: pointer; 
+      transition: all 0.2s; 
+    }
     .btn-your { background: var(--green-bright); color: #000; }
     .btn-your:hover { background: var(--green-primary); color: #fff; }
     .btn-their { background: var(--red-primary); color: #fff; }
@@ -167,44 +193,44 @@
     .calculator-card { 
       background: var(--card-bg); 
       border: 1px solid var(--card-border); 
-      border-radius: 12px; 
-      padding: 20px; 
+      border-radius: 14px; 
+      padding: 22px; 
       display: flex; 
       flex-direction: column; 
-      gap: 18px; 
+      gap: 20px; 
       height: fit-content; 
-      box-shadow: 0 4px 25px rgba(0,0,0,0.8); 
+      box-shadow: 0 4px 30px rgba(0,0,0,0.85); 
     }
     .calculator-card h2 { 
-      font-size: 1.2rem; 
+      font-size: 1.3rem; 
       font-weight: 700; 
       border-bottom: 1px solid var(--card-border); 
-      padding-bottom: 12px; 
+      padding-bottom: 14px; 
       color: #fff; 
     }
 
-    .trade-sides { display: flex; flex-direction: column; gap: 16px; }
+    .trade-sides { display: flex; flex-direction: column; gap: 18px; }
 
     /* Your Side Box */
-    .side-box-your { background: var(--green-bg); border: 1px solid var(--green-border); border-radius: 8px; padding: 14px; }
+    .side-box-your { background: var(--green-bg); border: 1px solid var(--green-border); border-radius: 10px; padding: 16px; }
     .your-title { color: var(--green-bright); }
 
     /* Their Side Box */
-    .side-box-their { background: var(--red-bg); border: 1px solid var(--red-border); border-radius: 8px; padding: 14px; }
+    .side-box-their { background: var(--red-bg); border: 1px solid var(--red-border); border-radius: 10px; padding: 16px; }
     .their-title { color: #f87171; }
 
-    .side-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .side-title { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .side-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .side-title { font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
 
-    .trade-list { list-style: none; min-height: 80px; max-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
-    .trade-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); padding: 8px 12px; border-radius: 6px; font-size: 0.88rem; border: 1px solid rgba(255,255,255,0.03); }
-    .remove-icon { color: #ef4444; cursor: pointer; font-weight: bold; margin-left: 8px; font-size: 0.9rem; }
+    .trade-list { list-style: none; min-height: 90px; max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+    .trade-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.6); padding: 10px 14px; border-radius: 8px; font-size: 0.92rem; border: 1px solid rgba(255,255,255,0.04); }
+    .remove-icon { color: #ef4444; cursor: pointer; font-weight: bold; margin-left: 10px; font-size: 1rem; }
     .remove-icon:hover { color: #f87171; }
 
-    .side-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--card-border); font-size: 0.9rem; font-weight: 600; }
+    .side-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--card-border); font-size: 0.95rem; font-weight: 700; }
 
     /* Result Verdict */
-    .verdict-box { text-align: center; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .verdict-box { text-align: center; padding: 14px; border-radius: 10px; font-weight: 800; font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.05em; }
     .verdict-win { background: rgba(0, 255, 102, 0.15); color: var(--green-bright); border: 1px solid rgba(0, 255, 102, 0.4); }
     .verdict-fair { background: rgba(234, 179, 8, 0.15); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.4); }
     .verdict-loss { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
@@ -219,7 +245,7 @@
     </header>
 
     <div class="filter-bar">
-      <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search/ítem..." onkeyup="filterData()">
+      <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar mineral/ítem..." onkeyup="filterData()">
       <select id="statusFilter" class="select-filter" onchange="filterData()">
         <option value="">Todos los Estados</option>
         <option value="🟢">📈 En subida</option>
@@ -269,6 +295,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=3"></script>
+  <script src="script.js?v=4"></script>
 </body>
 </html>
