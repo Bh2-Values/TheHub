@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,12 +30,12 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background-color: var(--bg-dark); color: var(--text-main); line-height: 1.5; padding: 30px 15px; }
+    body { font-family: 'Inter', sans-serif; background-color: var(--bg-dark); color: var(--text-main); line-height: 1.5; padding: 20px 15px; }
 
     .container { max-width: 1140px; margin: 0 auto; }
 
     /* Header */
-    header { text-align: center; margin-bottom: 40px; }
+    header { text-align: center; margin-bottom: 30px; }
     header h1 { font-size: 2.2rem; font-weight: 700; letter-spacing: -0.02em; background: linear-gradient(to right, #4ade80, #f87171); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     header p { color: var(--text-muted); font-size: 0.95rem; margin-top: 6px; }
 
@@ -46,34 +46,69 @@
     .select-filter { flex: 1; min-width: 180px; cursor: pointer; }
     .search-input:focus, .select-filter:focus { border-color: var(--green-primary); box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2); }
 
-    /* Main Grid */
+    /* Main Grid Layout */
     .dashboard-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 24px; }
     @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }
 
-    /* Table Container */
-    .table-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-    .table-container { max-height: 600px; overflow-y: auto; }
-    table { width: 100%; border-collapse: collapse; text-align: left; }
-    th { background: #1c2330; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 14px 18px; position: sticky; top: 0; z-index: 10; }
-    td { padding: 14px 18px; border-bottom: 1px solid var(--card-border); font-size: 0.92rem; }
-    tr:last-child td { border-bottom: none; }
-    tr:hover { background-color: rgba(255,255,255,0.02); }
+    /* Item Grid Container */
+    .items-container { max-height: 680px; overflow-y: auto; padding-right: 5px; }
+    .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
 
-    .item-name { font-weight: 600; color: #fff; }
-    .item-price { font-weight: 500; color: #e5e7eb; }
+    /* Tarjeta individual de ítem */
+    .item-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+    .item-card:hover { transform: translateY(-2px); border-color: #3b82f6; }
 
-    /* Status Badges */
-    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; background: rgba(255,255,255,0.05); }
+    .item-card img {
+      width: 60px;
+      height: 60px;
+      object-fit: contain;
+      margin-bottom: 8px;
+    }
+
+    .item-card .item-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 4px;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    .item-card .item-price {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #4ade80;
+      margin-bottom: 6px;
+    }
+
+    .item-card .badge {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.05);
+      margin-bottom: 10px;
+    }
 
     /* Action Buttons */
-    .btn-group { display: flex; gap: 6px; }
-    .btn-add { border: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+    .btn-group { display: flex; gap: 4px; width: 100%; }
+    .btn-add { flex: 1; border: none; padding: 6px 0; border-radius: 6px; font-weight: 600; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
     .btn-your { background: var(--green-primary); color: #000; }
-    .btn-your:hover { background: var(--green-hover); transform: translateY(-1px); color: #fff; }
+    .btn-your:hover { background: var(--green-hover); color: #fff; }
     .btn-their { background: var(--red-primary); color: #fff; }
-    .btn-their:hover { background: var(--red-hover); transform: translateY(-1px); }
+    .btn-their:hover { background: var(--red-hover); }
 
-    /* Trade Calculator Card */
+    /* Trade Calculator Side Panel */
     .calculator-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 18px; height: fit-content; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
     .calculator-card h2 { font-size: 1.2rem; font-weight: 700; border-bottom: 1px solid var(--card-border); padding-bottom: 12px; color: #fff; }
 
@@ -113,33 +148,21 @@
     </header>
 
     <div class="filter-bar">
-      <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search item name..." onkeyup="filterData()">
+      <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar mineral/ítem..." onkeyup="filterData()">
       <select id="statusFilter" class="select-filter" onchange="filterData()">
-        <option value="">All Demand Statuses</option>
-        <option value="🟢">📈 Rising</option>
-        <option value="⚪">⚖️ Stable</option>
-        <option value="🟣">≈ Fluctuating</option>
-        <option value="🔴">📉 Decreasing</option>
-        <option value="⚠️">⚠️ Manipulated</option>
+        <option value="">Todos los Estados</option>
+        <option value="🟢">📈 En subida</option>
+        <option value="⚪">⚖️ Estable</option>
+        <option value="🟣">≈ Fluctuando</option>
+        <option value="🔴">📉 En bajada</option>
+        <option value="⚠️">⚠️ Manipulado</option>
       </select>
     </div>
 
     <div class="dashboard-grid">
-      <!-- Item Table -->
-      <div class="table-card">
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Item Name</th>
-                <th>Value</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-          </table>
-        </div>
+      <!-- Item Grid (Reemplaza a la tabla antigua) -->
+      <div class="items-container">
+        <div id="itemsGrid" class="items-grid"></div>
       </div>
 
       <!-- Trade Calculator Side Panel -->
