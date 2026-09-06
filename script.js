@@ -69,12 +69,14 @@ function renderTable(data) {
   data.forEach(item => {
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td><strong>${item.name}</strong></td>
-      <td>${item.price}</td>
-      <td>${item.status}</td>
+      <td class="item-name">${item.name}</td>
+      <td class="item-price">${item.price}</td>
+      <td><span class="badge">${item.status}</span></td>
       <td>
-        <button class="btn-trade btn-your" onclick="addToTrade('${item.name.replace(/'/g, "\\'")}', ${item.value}, 'your')">+ Your Side</button>
-        <button class="btn-trade btn-their" onclick="addToTrade('${item.name.replace(/'/g, "\\'")}', ${item.value}, 'their')">+ Their Side</button>
+        <div class="btn-group">
+          <button class="btn-add btn-your" onclick="addToTrade('${item.name.replace(/'/g, "\\'")}', ${item.value}, 'your')">+ You</button>
+          <button class="btn-add btn-their" onclick="addToTrade('${item.name.replace(/'/g, "\\'")}', ${item.value}, 'their')">+ Them</button>
+        </div>
       </td>
     `;
     tbody.appendChild(row);
@@ -112,28 +114,50 @@ function removeFromTrade(index, side) {
   updateTradeUI();
 }
 
+function formatVal(val) {
+  return val >= 1 ? `${val.toFixed(1)}m` : `${(val * 1000).toFixed(0)}k`;
+}
+
 function updateTradeUI() {
   const yourList = document.getElementById("yourList");
   const yourTotal = document.getElementById("yourTotal");
   yourList.innerHTML = yourOffer.map((item, idx) => `
-    <li>
-      <span>${item.name} (${item.val >= 1 ? item.val + 'm' : (item.val * 1000) + 'k'})</span>
-      <span class="remove-btn" onclick="removeFromTrade(${idx}, 'your')">✕</span>
+    <li class="trade-item">
+      <span>${item.name} (${formatVal(item.val)})</span>
+      <span class="remove-icon" onclick="removeFromTrade(${idx}, 'your')">✕</span>
     </li>
   `).join("");
   const sumYour = yourOffer.reduce((acc, i) => acc + i.val, 0);
-  yourTotal.innerText = sumYour >= 1 ? `${sumYour.toFixed(2)}m` : `${(sumYour * 1000).toFixed(0)}k`;
+  yourTotal.innerText = formatVal(sumYour);
 
   const theirList = document.getElementById("theirList");
   const theirTotal = document.getElementById("theirTotal");
   theirList.innerHTML = theirOffer.map((item, idx) => `
-    <li>
-      <span>${item.name} (${item.val >= 1 ? item.val + 'm' : (item.val * 1000) + 'k'})</span>
-      <span class="remove-btn" onclick="removeFromTrade(${idx}, 'their')">✕</span>
+    <li class="trade-item">
+      <span>${item.name} (${formatVal(item.val)})</span>
+      <span class="remove-icon" onclick="removeFromTrade(${idx}, 'their')">✕</span>
     </li>
   `).join("");
   const sumTheir = theirOffer.reduce((acc, i) => acc + i.val, 0);
-  theirTotal.innerText = sumTheir >= 1 ? `${sumTheir.toFixed(2)}m` : `${(sumTheir * 1000).toFixed(0)}k`;
+  theirTotal.innerText = formatVal(sumTheir);
+
+  // Verdict calculation
+  const verdictBox = document.getElementById("verdictBox");
+  const diff = sumTheir - sumYour;
+
+  if (sumYour === 0 && sumTheir === 0) {
+    verdictBox.innerText = "Equal Trade";
+    verdictBox.className = "verdict-box verdict-fair";
+  } else if (diff > 1.0) {
+    verdictBox.innerText = "BIG WIN 🔥";
+    verdictBox.className = "verdict-box verdict-win";
+  } else if (diff >= -0.5 && diff <= 1.0) {
+    verdictBox.innerText = "FAIR TRADE ⚖️";
+    verdictBox.className = "verdict-box verdict-fair";
+  } else {
+    verdictBox.innerText = "LOSE 📉";
+    verdictBox.className = "verdict-box verdict-loss";
+  }
 }
 
 // Initial render
