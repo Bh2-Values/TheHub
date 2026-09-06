@@ -80,7 +80,7 @@ function renderItemsGrid(itemsToRender) {
     card.className = "item-card";
 
     // Se añade un parámetro de versión para forzar al navegador a solicitar la imagen real actualizada
-    const imageUrl = item.image + "?v=1";
+    const imageUrl = item.image + "?v=2";
 
     card.innerHTML = `
       <img src="${imageUrl}" alt="${item.name}" onerror="this.onerror=null; this.src='https://via.placeholder.com/60?text=?';">
