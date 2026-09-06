@@ -94,15 +94,18 @@ function renderItemsGrid(itemsToRender) {
   });
 }
 
-// Filtro de Búsqueda y Estado
+// Filtro Multicriterio (Búsqueda, Categoría y Estado)
 function filterData() {
   const searchText = document.getElementById("searchInput").value.toLowerCase();
+  const categorySelected = document.getElementById("categoryFilter") ? document.getElementById("categoryFilter").value : "";
   const statusSelected = document.getElementById("statusFilter").value;
 
   const filtered = items.filter((item) => {
-    const matchesSearch = item.name.toLowerCase().includes(searchText) || item.category.toLowerCase().includes(searchText);
+    const matchesSearch = item.name.toLowerCase().includes(searchText);
+    const matchesCategory = categorySelected === "" || item.category === categorySelected;
     const matchesStatus = statusSelected === "" || item.status === statusSelected;
-    return matchesSearch && matchesStatus;
+    
+    return matchesSearch && matchesCategory && matchesStatus;
   });
 
   renderItemsGrid(filtered);
