@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BH2 | Official Value List & Trade Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0b0e14;
+      --card-bg: #151a23;
+      --card-border: #232a36;
+      --primary: #7c3aed;
+      --primary-hover: #6d28d9;
+      --accent-pink: #ec4899;
+      --accent-pink-hover: #be185d;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --green-bg: rgba(34, 197, 94, 0.1);
+      --green-text: #4ade80;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background-color: var(--bg-dark); color: var(--text-main); line-height: 1.5; padding: 30px 15px; }
+
+    .container { max-width: 1140px; margin: 0 auto; }
+
+    /* Header */
+    header { text-align: center; margin-bottom: 40px; }
+    header h1 { font-size: 2.2rem; font-weight: 700; letter-spacing: -0.02em; background: linear-gradient(to right, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    header p { color: var(--text-muted); font-size: 0.95rem; margin-top: 6px; }
+
+    /* Search & Filters */
+    .filter-bar { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+    .search-input, .select-filter { background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-main); padding: 12px 16px; border-radius: 8px; font-size: 0.95rem; outline: none; transition: all 0.2s; }
+    .search-input { flex: 2; min-width: 240px; }
+    .select-filter { flex: 1; min-width: 180px; cursor: pointer; }
+    .search-input:focus, .select-filter:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2); }
+
+    /* Main Grid */
+    .dashboard-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 24px; }
+    @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }
+
+    /* Table Container */
+    .table-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    .table-container { max-height: 600px; overflow-y: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { background: #1c2330; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 14px 18px; position: sticky; top: 0; z-index: 10; }
+    td { padding: 14px 18px; border-bottom: 1px solid var(--card-border); font-size: 0.92rem; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover { background-color: rgba(255,255,255,0.02); }
+
+    .item-name { font-weight: 600; color: #fff; }
+    .item-price { font-weight: 500; color: #e5e7eb; }
+
+    /* Status Badges */
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; background: rgba(255,255,255,0.05); }
+
+    /* Action Buttons */
+    .btn-group { display: flex; gap: 6px; }
+    .btn-add { border: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+    .btn-your { background: var(--primary); color: #fff; }
+    .btn-your:hover { background: var(--primary-hover); transform: translateY(-1px); }
+    .btn-their { background: var(--accent-pink); color: #fff; }
+    .btn-their:hover { background: var(--accent-pink-hover); transform: translateY(-1px); }
+
+    /* Trade Calculator Card */
+    .calculator-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 18px; height: fit-content; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    .calculator-card h2 { font-size: 1.2rem; font-weight: 700; border-bottom: 1px solid var(--card-border); padding-bottom: 12px; color: #fff; }
+
+    .trade-sides { display: flex; flex-direction: column; gap: 16px; }
+    .side-box { background: #1a202c; border: 1px solid var(--card-border); border-radius: 8px; padding: 14px; }
+    .side-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .side-title { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .your-title { color: #a78bfa; }
+    .their-title { color: #f472b6; }
+
+    .trade-list { list-style: none; min-height: 80px; max-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+    .trade-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 6px 10px; border-radius: 6px; font-size: 0.88rem; }
+    .remove-icon { color: #ef4444; cursor: pointer; font-weight: bold; margin-left: 8px; font-size: 0.9rem; }
+    .remove-icon:hover { color: #dc2626; }
+
+    .side-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--card-border); font-size: 0.9rem; font-weight: 600; }
+    
+    /* Result Verdict */
+    .verdict-box { text-align: center; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .verdict-win { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+    .verdict-fair { background: rgba(234, 179, 8, 0.15); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.3); }
+    .verdict-loss { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>BH2 Value List & Trade Calculator</h1>
+      <p>Live Item Values & Fair Trade Calculator for BH2 Community</p>
+    </header>
+
+    <div class="filter-bar">
+      <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search item name..." onkeyup="filterData()">
+      <select id="statusFilter" class="select-filter" onchange="filterData()">
+        <option value="">All Demand Statuses</option>
+        <option value="🟢">📈 Rising</option>
+        <option value="⚪">⚖️ Stable</option>
+        <option value="🟣">≈ Fluctuating</option>
+        <option value="🔴">📉 Decreasing</option>
+        <option value="⚠️">⚠️ Manipulated</option>
+      </select>
+    </div>
+
+    <div class="dashboard-grid">
+      <div class="table-card">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Item Name</th>
+                <th>Value</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="calculator-card">
+        <h2>Trade Calculator</h2>
+        
+        <div class="trade-sides">
+          <div class="side-box">
+            <div class="side-header">
+              <span class="side-title your-title">Your Offer</span>
+            </div>
+            <ul id="yourList" class="trade-list"></ul>
+            <div class="side-footer">
+              <span>Your Total:</span>
+              <span id="yourTotal" style="color: #a78bfa;">0m</span>
+            </div>
+          </div>
+
+          <div class="side-box">
+            <div class="side-header">
+              <span class="side-title their-title">Their Offer</span>
+            </div>
+            <ul id="theirList" class="trade-list"></ul>
+            <div class="side-footer">
+              <span>Their Total:</span>
+              <span id="theirTotal" style="color: #f472b6;">0m</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="verdictBox" class="verdict-box verdict-fair">
+          Equal Trade
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
