@@ -94,7 +94,7 @@
       transition: all 0.2s; 
     }
     .search-input { flex: 3; min-width: 280px; }
-    .select-filter { flex: 1; min-width: 220px; cursor: pointer; }
+    .select-filter { flex: 1; min-width: 200px; cursor: pointer; }
     .search-input:focus, .select-filter:focus { 
       border-color: var(--green-bright); 
       box-shadow: 0 0 12px rgba(0, 255, 102, 0.25); 
@@ -244,14 +244,22 @@
       <p>Live Item Values & Fair Trade Calculator for BH2 Community</p>
     </header>
 
-<div class="filter-bar">
+    <div class="filter-bar">
       <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search item..." onkeyup="filterData()">
+      
+      <select id="categoryFilter" class="select-filter" onchange="filterData()">
+        <option value="">All Categories</option>
+        <option value="Overlays">Overlays</option>
+        <option value="Auras">Auras</option>
+        <option value="Mounts">Mounts</option>
+      </select>
+
       <select id="statusFilter" class="select-filter" onchange="filterData()">
         <option value="">All Statuses</option>
-        <option value="🟢">📈 Rising</option>
-        <option value="⚪">⚖️ Stable</option>
-        <option value="🟣">≈ Fluctuating</option>
-        <option value="🔴">📉 Dropping</option>
+        <option value="🟢">🟢 Rising</option>
+        <option value="⚪">⚪ Stable</option>
+        <option value="🟣">🟣 Fluctuating</option>
+        <option value="🔴">🔴 Dropping</option>
         <option value="⚠️">⚠️ Manipulated</option>
       </select>
     </div>
