@@ -62,7 +62,7 @@
       padding: 15px 25px; 
     }
 
-    /* Agrandado el contenedor para ocupar casi toda la pantalla */
+    /* Contenedor amplio */
     .container { 
       width: 96%; 
       max-width: 1750px; 
@@ -100,7 +100,7 @@
       box-shadow: 0 0 12px rgba(0, 255, 102, 0.25); 
     }
 
-    /* Main Grid Layout - Distribución más amplia */
+    /* Main Grid Layout */
     .dashboard-grid { 
       display: grid; 
       grid-template-columns: 1fr 380px; 
@@ -113,14 +113,14 @@
     /* Item Grid Container */
     .items-container { max-height: 780px; overflow-y: auto; padding-right: 10px; }
     
-    /* Cuadrícula de ítems con tamaño aumentado */
+    /* Cuadrícula de ítems */
     .items-grid { 
       display: grid; 
       grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); 
       gap: 16px; 
     }
 
-    /* Tarjetas individuales de ítem más grandes */
+    /* Tarjetas individuales */
     .item-card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
@@ -139,7 +139,6 @@
       box-shadow: 0 6px 20px rgba(0, 255, 102, 0.18);
     }
 
-    /* Imagen más grande */
     .item-card img {
       width: 85px;
       height: 85px;
@@ -172,7 +171,7 @@
       margin-bottom: 12px;
     }
 
-    /* Action Buttons más grandes y legibles */
+    /* Botones */
     .btn-group { display: flex; gap: 6px; width: 100%; }
     .btn-add { 
       flex: 1; 
@@ -189,7 +188,7 @@
     .btn-their { background: var(--red-primary); color: #fff; }
     .btn-their:hover { background: var(--red-hover); }
 
-    /* Trade Calculator Side Panel */
+    /* Panel de la Calculadora */
     .calculator-card { 
       background: var(--card-bg); 
       border: 1px solid var(--card-border); 
@@ -211,11 +210,9 @@
 
     .trade-sides { display: flex; flex-direction: column; gap: 18px; }
 
-    /* Your Side Box */
     .side-box-your { background: var(--green-bg); border: 1px solid var(--green-border); border-radius: 10px; padding: 16px; }
     .your-title { color: var(--green-bright); }
 
-    /* Their Side Box */
     .side-box-their { background: var(--red-bg); border: 1px solid var(--red-border); border-radius: 10px; padding: 16px; }
     .their-title { color: #f87171; }
 
@@ -229,7 +226,7 @@
 
     .side-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--card-border); font-size: 0.95rem; font-weight: 700; }
 
-    /* Result Verdict */
+    /* Dictamen / Resultado */
     .verdict-box { text-align: center; padding: 14px; border-radius: 10px; font-weight: 800; font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.05em; }
     .verdict-win { background: rgba(0, 255, 102, 0.15); color: var(--green-bright); border: 1px solid rgba(0, 255, 102, 0.4); }
     .verdict-fair { background: rgba(234, 179, 8, 0.15); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.4); }
@@ -303,6 +300,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=4"></script>
+  <script src="script.js?v=5"></script>
 </body>
 </html>
