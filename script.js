@@ -68,7 +68,7 @@ const items = [
 let yourTrade = [];
 let theirTrade = [];
 
-// Función para renderizar la cuadrícula
+// Función para renderizar la cuadrícula (evita problemas de caché en las imágenes)
 function renderItemsGrid(itemsToRender) {
   const container = document.getElementById("itemsGrid");
   if (!container) return;
@@ -79,8 +79,11 @@ function renderItemsGrid(itemsToRender) {
     const card = document.createElement("div");
     card.className = "item-card";
 
+    // Se añade un parámetro de versión para forzar al navegador a solicitar la imagen real actualizada
+    const imageUrl = item.image + "?v=1";
+
     card.innerHTML = `
-      <img src="${item.image}" alt="${item.name}" onerror="this.onerror=null; this.src='https://via.placeholder.com/60?text=?';">
+      <img src="${imageUrl}" alt="${item.name}" onerror="this.onerror=null; this.src='https://via.placeholder.com/60?text=?';">
       <div class="item-name">${item.name}</div>
       <div class="item-price">${item.price}</div>
       <div class="badge">${item.status} ${item.category}</div>
