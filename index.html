@@ -32,6 +32,29 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    /* Scrollbar personalizada para navegador (Chrome, Edge, Safari) */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #050505;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1f241d;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--green-primary);
+    }
+
+    /* Scrollbar para Firefox */
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: #1f241d #050505;
+    }
+
     body { 
       font-family: 'Inter', sans-serif; 
       background-color: var(--bg-dark); 
@@ -40,7 +63,7 @@
       padding: 20px 15px; 
     }
 
-    .container { max-width: 1140px; margin: 0 auto; }
+    .container { max-width: 1280px; margin: 0 auto; }
 
     /* Header */
     header { text-align: center; margin-bottom: 30px; }
@@ -73,13 +96,13 @@
       box-shadow: 0 0 10px rgba(0, 255, 102, 0.25); 
     }
 
-    /* Main Grid Layout */
-    .dashboard-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 24px; }
-    @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }
+    /* Main Grid Layout - Ampliado horizontalmente la columna de la lista (2.2fr) */
+    .dashboard-grid { display: grid; grid-template-columns: 2.2fr 1fr; gap: 24px; }
+    @media (max-width: 950px) { .dashboard-grid { grid-template-columns: 1fr; } }
 
     /* Item Grid Container */
-    .items-container { max-height: 680px; overflow-y: auto; padding-right: 5px; }
-    .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+    .items-container { max-height: 700px; overflow-y: auto; padding-right: 8px; }
+    .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 12px; }
 
     /* Tarjeta individual de ítem */
     .item-card {
@@ -196,7 +219,7 @@
     </header>
 
     <div class="filter-bar">
-      <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar mineral/ítem..." onkeyup="filterData()">
+      <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search/ítem..." onkeyup="filterData()">
       <select id="statusFilter" class="select-filter" onchange="filterData()">
         <option value="">Todos los Estados</option>
         <option value="🟢">📈 En subida</option>
