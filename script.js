@@ -64,37 +64,133 @@ const items = [
   { "name": "Yeti", "category": "Mounts", "price": "1-2m", "value": 1.5, "status": "🟣", "image": "images/yeti.png" }
 ];
 
-// Función para renderizar los ítems en formato Cuadrícula (Grid)
+// Listas para la calculadora
+let yourTrade = [];
+let theirTrade = [];
+
+// Función para renderizar la cuadrícula
 function renderItemsGrid(itemsToRender) {
-  const container = document.getElementById("items-container");
+  const container = document.getElementById("itemsGrid");
   if (!container) return;
 
-  container.className = "items-grid"; // Aplica la clase de cuadrícula
   container.innerHTML = "";
 
-  itemsToRender.forEach(item => {
+  itemsToRender.forEach((item) => {
     const card = document.createElement("div");
     card.className = "item-card";
-    
-    // Si la foto falla al cargar, muestra un cuadro elegante
-    card.innerHTML = `
-      <img src="${item.image}" alt="${item.name}" onerror="this.onerror=null; this.src='https://via.placeholder.com/64?text=?';">
-      <div class="item-name">${item.name}</div>
-      <div class="item-price">${item.price} ${item.status}</div>
-    `;
 
-    // Acción al hacer clic (ej. agregar a la calculadora)
-    card.onclick = () => {
-      if (typeof addToTrade === "function") {
-        addToTrade(item);
-      }
-    };
+    card.innerHTML = `
+      <img src="${item.image}" alt="${item.name}" onerror="this.onerror=null; this.src='https://via.placeholder.com/60?text=?';">
+      <div class="item-name">${item.name}</div>
+      <div class="item-price">${item.price}</div>
+      <div class="badge">${item.status} ${item.category}</div>
+      <div class="btn-group">
+        <button class="btn-add btn-your" onclick="addToYour('${item.name}')">+ Your</button>
+        <button class="btn-add btn-their" onclick="addToTheir('${item.name}')">+ Their</button>
+      </div>
+    `;
 
     container.appendChild(card);
   });
 }
 
-// Inicializar renderizado
+// Filtro de Búsqueda y Estado
+function filterData() {
+  const searchText = document.getElementById("searchInput").value.toLowerCase();
+  const statusSelected = document.getElementById("statusFilter").value;
+
+  const filtered = items.filter((item) => {
+    const matchesSearch = item.name.toLowerCase().includes(searchText) || item.category.toLowerCase().includes(searchText);
+    const matchesStatus = statusSelected === "" || item.status === statusSelected;
+    return matchesSearch && matchesStatus;
+  });
+
+  renderItemsGrid(filtered);
+}
+
+// Lógica de la Calculadora de Trades
+function addToYour(itemName) {
+  const item = items.find((i) => i.name === itemName);
+  if (item) {
+    yourTrade.push(item);
+    updateCalculator();
+  }
+}
+
+function addToTheir(itemName) {
+  const item = items.find((i) => i.name === itemName);
+  if (item) {
+    theirTrade.push(item);
+    updateCalculator();
+  }
+}
+
+function removeFromYour(index) {
+  yourTrade.splice(index, 1);
+  updateCalculator();
+}
+
+function removeFromTheir(index) {
+  theirTrade.splice(index, 1);
+  updateCalculator();
+}
+
+function updateCalculator() {
+  const yourListEl = document.getElementById("yourList");
+  const theirListEl = document.getElementById("theirList");
+  const yourTotalEl = document.getElementById("yourTotal");
+  const theirTotalEl = document.getElementById("theirTotal");
+  const verdictBox = document.getElementById("verdictBox");
+
+  // Render Your Side
+  yourListEl.innerHTML = "";
+  let yourSum = 0;
+  yourTrade.forEach((item, idx) => {
+    yourSum += item.value;
+    yourListEl.innerHTML += `
+      <li class="trade-item">
+        <span>${item.name} (${item.value}m)</span>
+        <span class="remove-icon" onclick="removeFromYour(${idx})">✕</span>
+      </li>
+    `;
+  });
+
+  // Render Their Side
+  theirListEl.innerHTML = "";
+  let theirSum = 0;
+  theirTrade.forEach((item, idx) => {
+    theirSum += item.value;
+    theirListEl.innerHTML += `
+      <li class="trade-item">
+        <span>${item.name} (${item.value}m)</span>
+        <span class="remove-icon" onclick="removeFromTheir(${idx})">✕</span>
+      </li>
+    `;
+  });
+
+  yourTotalEl.innerText = `${yourSum.toFixed(2)}m`;
+  theirTotalEl.innerText = `${theirSum.toFixed(2)}m`;
+
+  // Dictamen / Verdict
+  const diff = theirSum - yourSum;
+  verdictBox.className = "verdict-box";
+
+  if (yourSum === 0 && theirSum === 0) {
+    verdictBox.innerText = "Equal Trade";
+    verdictBox.classList.add("verdict-fair");
+  } else if (Math.abs(diff) <= 0.5) {
+    verdictBox.innerText = "Fair Trade ⚖️";
+    verdictBox.classList.add("verdict-fair");
+  } else if (diff > 0.5) {
+    verdictBox.innerText = `BIG WIN (+${diff.toFixed(2)}m) 🚀`;
+    verdictBox.classList.add("verdict-win");
+  } else {
+    verdictBox.innerText = `LOSE (${diff.toFixed(2)}m) 🛑`;
+    verdictBox.classList.add("verdict-loss");
+  }
+}
+
+// Inicializar al cargar
 document.addEventListener("DOMContentLoaded", () => {
   renderItemsGrid(items);
 });
