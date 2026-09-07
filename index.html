@@ -91,6 +91,25 @@
     }
     header p { color: var(--text-muted); font-size: 1rem; margin-top: 4px; }
 
+    /* Header Badges / Status */
+    .header-status {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .status-badge {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+
     /* Search & Filters */
     .filter-bar { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
     .search-input, .select-filter { 
@@ -241,6 +260,62 @@
     .verdict-win { background: rgba(0, 255, 102, 0.15); color: var(--green-bright); border: 1px solid rgba(0, 255, 102, 0.4); }
     .verdict-fair { background: rgba(234, 179, 8, 0.15); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.4); }
     .verdict-loss { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+
+    /* Footer Styles */
+    footer {
+      margin-top: 40px;
+      padding: 25px 20px;
+      background: var(--card-bg);
+      border-top: 1px solid var(--card-border);
+      text-align: center;
+      border-radius: 14px;
+    }
+
+    .footer-container {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .discord-box p {
+      color: var(--text-main);
+      font-size: 0.95rem;
+      margin-bottom: 10px;
+    }
+
+    .discord-btn {
+      display: inline-block;
+      background: #5865F2;
+      color: #fff;
+      padding: 8px 18px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.9rem;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .discord-btn:hover {
+      background: #4752C4;
+      transform: translateY(-2px);
+    }
+
+    .credits-box {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 15px;
+      width: 100%;
+    }
+
+    /* Colores personalizados para los créditos */
+    .c-emerald { color: #10b981; font-weight: 600; }
+    .c-koa { color: #f472b6; font-weight: 600; }
+    .c-icy { color: #38bdf8; font-weight: 600; }
+    .c-dijunti { color: #a855f7; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -249,6 +324,12 @@
     <header>
       <h1>BH2 Value List & Trade Calculator</h1>
       <p>Live Item Values & Fair Trade Calculator for BH2 Community</p>
+      
+      <!-- Status Badges -->
+      <div class="header-status">
+        <span class="status-badge">🕒 Last updated: 3/09/2026</span>
+        <span class="status-badge">🔄 Updates count: 12</span>
+      </div>
     </header>
 
     <div class="filter-bar">
@@ -308,6 +389,21 @@
         </div>
       </div>
     </div>
+
+    <!-- Footer -->
+    <footer>
+      <div class="footer-container">
+        <div class="discord-box">
+          <p>Join our community server for more tips!</p>
+          <a href="https://discord.gg/r467X6mcBS" target="_blank" class="discord-btn">
+            💬 Join Discord Server
+          </a>
+        </div>
+        <div class="credits-box">
+          <p><strong>Credits:</strong> <span class="c-emerald">Emerald</span> for the template, <span class="c-koa">Koa</span> + <span class="c-icy">Icy</span> for the help and <span class="c-dijunti">Dijunti</span> for the prices.</p>
+        </div>
+      </div>
+    </footer>
   </div>
 
   <script src="script.js?v=5"></script>
