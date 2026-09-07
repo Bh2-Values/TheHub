@@ -188,7 +188,7 @@ function updateCalculator() {
     verdictBox.innerText = "Fair Trade ⚖️";
     verdictBox.classList.add("verdict-fair");
   } else if (diff > 0.5) {
-    verdictBox.innerText = `BIG WIN (+${diff.toFixed(2)}m) 🚀`;
+    verdictBox.innerText = `WIN (+${diff.toFixed(2)}m) 🚀`;
     verdictBox.classList.add("verdict-win");
   } else {
     verdictBox.innerText = `LOSE (${diff.toFixed(2)}m) 🛑`;
