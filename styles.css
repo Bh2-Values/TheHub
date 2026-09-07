@@ -1,58 +1,299 @@
-body {
-  font-family: system-ui, -apple-system, sans-serif;
-  background-color: #11111b;
-  color: #cdd6f4;
-  padding: 15px;
-  margin: 0;
+:root {
+  /* Fondo negro profundo y tarjetas negro carbón */
+  --bg-dark: #050505;
+  --card-bg: #0d0d0d;
+  --card-border: #1f241d;
+  
+  /* Tema Verde Neón Gamer */
+  --green-primary: #10b981;
+  --green-bright: #00ff66;
+  --green-hover: #059669;
+  --green-bg: rgba(16, 185, 129, 0.06);
+  --green-border: rgba(16, 185, 129, 0.3);
+  
+  /* Acentos Rojos para "Their Offer" */
+  --red-primary: #ef4444;
+  --red-hover: #dc2626;
+  --red-bg: rgba(239, 68, 68, 0.06);
+  --red-border: rgba(239, 68, 68, 0.3);
+  
+  --text-main: #f3f4f6;
+  --text-muted: #828a95;
 }
 
-/* Cuadrícula adaptable */
-.items-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 10px;
-  padding: 10px 0;
+* { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+  scrollbar-width: thin;
+  scrollbar-color: #1f241d #050505;
 }
 
-/* Tarjeta de cada miner/ítem */
+/* Scrollbar personalizada oscura */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #050505;
+}
+::-webkit-scrollbar-thumb {
+  background: #1f241d;
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--green-primary);
+}
+
+body { 
+  font-family: 'Inter', sans-serif; 
+  background-color: var(--bg-dark); 
+  color: var(--text-main); 
+  line-height: 1.5; 
+  padding: 15px 25px; 
+}
+
+/* Contenedor amplio */
+.container { 
+  width: 96%; 
+  max-width: 1750px; 
+  margin: 0 auto; 
+}
+
+/* Header */
+header { text-align: center; margin-bottom: 25px; }
+header h1 { 
+  font-size: 2.6rem; 
+  font-weight: 800; 
+  letter-spacing: -0.02em; 
+  background: linear-gradient(to right, #00ff66, #10b981); 
+  -webkit-background-clip: text; 
+  -webkit-text-fill-color: transparent; 
+}
+header p { color: var(--text-muted); font-size: 1rem; margin-top: 4px; }
+
+/* Estilos para badges en Header */
+.header-status {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.status-badge {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+/* Search & Filters */
+.filter-bar { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+.search-input, .select-filter { 
+  background: var(--card-bg); 
+  border: 1px solid var(--card-border); 
+  color: var(--text-main); 
+  padding: 14px 18px; 
+  border-radius: 10px; 
+  font-size: 1rem; 
+  outline: none; 
+  transition: all 0.2s; 
+}
+.search-input { flex: 3; min-width: 280px; }
+.select-filter { flex: 1; min-width: 200px; cursor: pointer; }
+.search-input:focus, .select-filter:focus { 
+  border-color: var(--green-bright); 
+  box-shadow: 0 0 12px rgba(0, 255, 102, 0.25); 
+}
+
+/* Main Grid Layout */
+.dashboard-grid { 
+  display: grid; 
+  grid-template-columns: 1fr 380px; 
+  gap: 25px; 
+}
+@media (max-width: 1100px) { 
+  .dashboard-grid { grid-template-columns: 1fr; } 
+}
+
+/* Item Grid Container */
+.items-container { max-height: 780px; overflow-y: auto; padding-right: 10px; }
+
+/* Cuadrícula de ítems */
+.items-grid { 
+  display: grid; 
+  grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); 
+  gap: 16px; 
+}
+
+/* Tarjetas individuales */
 .item-card {
-  background-color: #1e1e2e;
-  border: 1px solid #313244;
-  border-radius: 8px;
-  padding: 10px 5px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 16px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  cursor: pointer;
-  transition: transform 0.15s ease, border-color 0.15s ease;
+  position: relative;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.item-card:hover { 
+  transform: translateY(-4px); 
+  border-color: var(--green-bright); 
+  box-shadow: 0 6px 20px rgba(0, 255, 102, 0.18);
 }
 
-.item-card:hover {
-  transform: translateY(-2px);
-  border-color: #89b4fa;
-}
-
-/* Foto del mineral/ítem */
 .item-card img {
-  width: 55px;
-  height: 55px;
+  width: 85px;
+  height: 85px;
   object-fit: contain;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
 }
 
-/* Texto del nombre */
 .item-card .item-name {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #cdd6f4;
-  margin-bottom: 4px;
-  line-height: 1.1;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+  line-height: 1.25;
   word-break: break-word;
 }
 
-/* Precio / Valor */
 .item-card .item-price {
-  font-size: 0.75rem;
-  color: #a6e3a1;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--green-bright);
+  margin-bottom: 8px;
 }
+
+.item-card .badge {
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.06);
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+/* Botones */
+.btn-group { display: flex; gap: 6px; width: 100%; }
+.btn-add { 
+  flex: 1; 
+  border: none; 
+  padding: 8px 0; 
+  border-radius: 8px; 
+  font-weight: 700; 
+  font-size: 0.82rem; 
+  cursor: pointer; 
+  transition: all 0.2s; 
+}
+.btn-your { background: var(--green-bright); color: #000; }
+.btn-your:hover { background: var(--green-primary); color: #fff; }
+.btn-their { background: var(--red-primary); color: #fff; }
+.btn-their:hover { background: var(--red-hover); }
+
+/* Panel de la Calculadora */
+.calculator-card { 
+  background: var(--card-bg); 
+  border: 1px solid var(--card-border); 
+  border-radius: 14px; 
+  padding: 22px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 20px; 
+  height: fit-content; 
+  box-shadow: 0 4px 30px rgba(0,0,0,0.85); 
+}
+.calculator-card h2 { 
+  font-size: 1.3rem; 
+  font-weight: 700; 
+  border-bottom: 1px solid var(--card-border); 
+  padding-bottom: 14px; 
+  color: #fff; 
+}
+
+.trade-sides { display: flex; flex-direction: column; gap: 18px; }
+
+.side-box-your { background: var(--green-bg); border: 1px solid var(--green-border); border-radius: 10px; padding: 16px; }
+.your-title { color: var(--green-bright); }
+
+.side-box-their { background: var(--red-bg); border: 1px solid var(--red-border); border-radius: 10px; padding: 16px; }
+.their-title { color: #f87171; }
+
+.side-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.side-title { font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+
+.trade-list { list-style: none; min-height: 90px; max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+.trade-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.6); padding: 10px 14px; border-radius: 8px; font-size: 0.92rem; border: 1px solid rgba(255,255,255,0.04); }
+.remove-icon { color: #ef4444; cursor: pointer; font-weight: bold; margin-left: 10px; font-size: 1rem; }
+.remove-icon:hover { color: #f87171; }
+
+.side-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--card-border); font-size: 0.95rem; font-weight: 700; }
+
+/* Dictamen / Resultado */
+.verdict-box { text-align: center; padding: 14px; border-radius: 10px; font-weight: 800; font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.verdict-win { background: rgba(0, 255, 102, 0.15); color: var(--green-bright); border: 1px solid rgba(0, 255, 102, 0.4); }
+.verdict-fair { background: rgba(234, 179, 8, 0.15); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.4); }
+.verdict-loss { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+
+/* Estilos para el Footer */
+footer {
+  margin-top: 50px;
+  padding: 30px 20px;
+  background: var(--card-bg);
+  border-top: 1px solid var(--card-border);
+  text-align: center;
+  border-radius: 14px 14px 0 0;
+}
+
+.footer-container {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+.discord-box p {
+  color: var(--text-main);
+  font-size: 0.95rem;
+  margin-bottom: 10px;
+}
+
+.discord-btn {
+  display: inline-block;
+  background: #5865F2;
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.discord-btn:hover {
+  background: #4752C4;
+  transform: translateY(-2px);
+}
+
+.credits-box {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 15px;
+  width: 100%;
+}
+
+/* Colores personalizados de créditos */
+.c-emerald { color: #10b981; font-weight: 600; }
+.c-koa { color: #f472b6; font-weight: 600; }
+.c-icy { color: #38bdf8; font-weight: 600; }
+.c-dijunti { color: #a855f7; font-weight: 600; }
