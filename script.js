@@ -13,7 +13,7 @@ const items = [
   { "name": "Frustrated Furball", "category": "Overlays", "price": "2-3m", "value": 2.5, "status": "🟣", "image": "images/frustrated_furball.png" },
   { "name": "Gingerbread Outfit", "category": "Overlays", "price": "14-16m", "value": 15.0, "status": "⚪", "image": "images/gingerbread_outfit.png" },
   { "name": "Heart of The Forest", "category": "Overlays", "price": "4-5.5m", "value": 4.75, "status": "🟣", "image": "images/heart_of_the_forest.png" },
-  { "name": "Hollowflare Gourdmail", "category": "Overlays", "price": "15m", "value": 15.0, "status": "⚪", "image": "images/hollowflare_gourdmail.png" },
+  { "name": "Hollowflare Gourdmail", "category": "Overlays", "price": "15m", "value": 155.0, "status": "⚪", "image": "images/hollowflare_gourdmail.png" },
   { "name": "Holy Excalibur", "category": "Overlays", "price": "2-3.5m", "value": 2.75, "status": "🟣", "image": "images/holy_excalibur.png" },
   { "name": "Hypnotist Jester Costume", "category": "Overlays", "price": "13m", "value": 13.0, "status": "⚪", "image": "images/hypnotist_jester_costume.png" },
   { "name": "Kyodai Robes", "category": "Overlays", "price": "7m", "value": 7.0, "status": "⚪", "image": "images/kyodai_robes.png" },
