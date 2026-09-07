@@ -68,7 +68,7 @@ const items = [
 let yourTrade = [];
 let theirTrade = [];
 
-// Función para renderizar la cuadrícula (evita problemas de caché en las imágenes)
+// Función para renderizar la cuadrícula
 function renderItemsGrid(itemsToRender) {
   const container = document.getElementById("itemsGrid");
   if (!container) return;
@@ -76,10 +76,11 @@ function renderItemsGrid(itemsToRender) {
   container.innerHTML = "";
 
   itemsToRender.forEach((item) => {
+    // Buscamos el índice original del elemento dentro del array principal 'items'
+    const originalIndex = items.indexOf(item);
     const card = document.createElement("div");
     card.className = "item-card";
 
-    // Genera un parámetro único basado en el timestamp actual para romper caché
     const imageUrl = item.image + "?v=" + new Date().getTime();
 
     card.innerHTML = `
@@ -88,8 +89,8 @@ function renderItemsGrid(itemsToRender) {
       <div class="item-price">${item.price}</div>
       <div class="badge">${item.status} ${item.category}</div>
       <div class="btn-group">
-        <button class="btn-add btn-your" onclick="addToYour('${item.name}')">+ Your</button>
-        <button class="btn-add btn-their" onclick="addToTheir('${item.name}')">+ Their</button>
+        <button class="btn-add btn-your" onclick="addToYour(${originalIndex})">+ Your</button>
+        <button class="btn-add btn-their" onclick="addToTheir(${originalIndex})">+ Their</button>
       </div>
     `;
 
@@ -114,17 +115,17 @@ function filterData() {
   renderItemsGrid(filtered);
 }
 
-// Lógica de la Calculadora de Trades
-function addToYour(itemName) {
-  const item = items.find((i) => i.name === itemName);
+// Lógica de la Calculadora de Trades utilizando el índice
+function addToYour(itemIndex) {
+  const item = items[itemIndex];
   if (item) {
     yourTrade.push(item);
     updateCalculator();
   }
 }
 
-function addToTheir(itemName) {
-  const item = items.find((i) => i.name === itemName);
+function addToTheir(itemIndex) {
+  const item = items[itemIndex];
   if (item) {
     theirTrade.push(item);
     updateCalculator();
