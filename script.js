@@ -76,7 +76,6 @@ function renderItemsGrid(itemsToRender) {
   container.innerHTML = "";
 
   itemsToRender.forEach((item) => {
-    // Buscamos el índice original del elemento dentro del array principal 'items'
     const originalIndex = items.indexOf(item);
     const card = document.createElement("div");
     card.className = "item-card";
@@ -98,7 +97,7 @@ function renderItemsGrid(itemsToRender) {
   });
 }
 
-// Filtro Multicriterio (Búsqueda, Categoría y Estado)
+// Filtro Multicriterio
 function filterData() {
   const searchText = document.getElementById("searchInput").value.toLowerCase();
   const categorySelected = document.getElementById("categoryFilter") ? document.getElementById("categoryFilter").value : "";
@@ -149,7 +148,6 @@ function updateCalculator() {
   const theirTotalEl = document.getElementById("theirTotal");
   const verdictBox = document.getElementById("verdictBox");
 
-  // Render Your Side
   yourListEl.innerHTML = "";
   let yourSum = 0;
   yourTrade.forEach((item, idx) => {
@@ -162,7 +160,6 @@ function updateCalculator() {
     `;
   });
 
-  // Render Their Side
   theirListEl.innerHTML = "";
   let theirSum = 0;
   theirTrade.forEach((item, idx) => {
@@ -178,7 +175,6 @@ function updateCalculator() {
   yourTotalEl.innerText = `${yourSum.toFixed(2)}m`;
   theirTotalEl.innerText = `${theirSum.toFixed(2)}m`;
 
-  // Dictamen / Verdict
   const diff = theirSum - yourSum;
   verdictBox.className = "verdict-box";
 
@@ -197,7 +193,6 @@ function updateCalculator() {
   }
 }
 
-// Inicializar al cargar
 document.addEventListener("DOMContentLoaded", () => {
   renderItemsGrid(items);
 });
