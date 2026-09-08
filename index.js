@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder, ActivityType } = require('discord.js');
 const fetch = require('node-fetch');
 const vm = require('vm');
 
@@ -15,6 +15,11 @@ const SCRIPT_URL = "https://raw.githubusercontent.com/BH2-Values/TheHub/main/scr
 
 client.on('ready', () => {
   console.log(`Values Bot is now online as ${client.user.tag}`);
+  
+  // Establece el estado personalizado del bot
+  client.user.setActivity('BH2 Value List | !value', { 
+    type: ActivityType.Playing 
+  });
 });
 
 client.on('messageCreate', async (message) => {
