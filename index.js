@@ -1,7 +1,7 @@
 const { Client, GatewayIntentBits, EmbedBuilder, ActivityType } = require('discord.js');
 const fetch = require('node-fetch');
 const vm = require('vm');
-const http = require('http'); // 1. Importa el módulo http nativo
+const http = require('http');
 
 // --- SERVIDOR HTTP PARA RENDER ---
 const PORT = process.env.PORT || 3000;
@@ -29,7 +29,6 @@ const SCRIPT_URL = "https://raw.githubusercontent.com/BH2-Values/TheHub/main/scr
 client.on('ready', () => {
   console.log(`Values Bot is now online as ${client.user.tag}`);
   
-  // Establece el estado correctamente usando setPresence
   client.user.setPresence({
     activities: [{ name: 'BH2 Value List | !value', type: ActivityType.Playing }],
     status: 'online',
@@ -48,11 +47,9 @@ client.on('messageCreate', async (message) => {
       const res = await fetch(SCRIPT_URL);
       const text = await res.text();
 
-      // Extrae la declaración de la variable items
       const match = text.match(/const items = (\[[\s\S]*?\]);/);
       if (!match) return message.reply("Could not parse the database array.");
 
-      // Evalúa el código JavaScript eliminando errores de parsing por comentarios
       const context = {};
       vm.createContext(context);
       vm.runInContext(`items = ${match[1]}`, context);
@@ -84,21 +81,11 @@ client.on('messageCreate', async (message) => {
 
       message.channel.send({ embeds: [embed] });
 
-    } else (err) => { // Pequeño apunte: en tu código original tenías un 'catch (err)' mal cerrado o escrito con 'else', asegúrate de mantener el catch tal y como estaba abajo.
-      console.error(err);
-      message.reply("An error occurred while checking the value.");
-    }
-  }
-});
-
-// Asegúrate de que el bloque try/catch de tu comando termine bien así:
-/*
     } catch (err) {
       console.error(err);
       message.reply("An error occurred while checking the value.");
     }
   }
 });
-*/
 
 client.login(BOT_TOKEN);
