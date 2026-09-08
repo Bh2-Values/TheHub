@@ -9,7 +9,7 @@ const items = [
   { "name": "Demonstone Blade", "category": "Overlays", "price": "5m", "value": 5.0, "status": "⚪", "image": "images/demonstone_blade.png" },
   { "name": "Fallen Angel Armor", "category": "Overlays", "price": "6-8m", "value": 7.0, "status": "🟣", "image": "images/fallen_angel_armor.png" },
   { "name": "Final Aegis", "category": "Overlays", "price": "3-4.5m", "value": 3.75, "status": "🟣", "image": "images/final_aegis.png" },
-  { "name": "Frank", "category": "Overlays", "price": "1m", "value": 1.0, "status": "⚪", "image": "images/frank.png" },
+  { "name": "Frank", "category": "Overlays", "price": "100m", "value": 100.0, "status": "⚪", "image": "images/frank.png" },
   { "name": "Frustrated Furball", "category": "Overlays", "price": "2-3m", "value": 2.5, "status": "🟣", "image": "images/frustrated_furball.png" },
   { "name": "Gingerbread Outfit", "category": "Overlays", "price": "14-16m", "value": 15.0, "status": "⚪", "image": "images/gingerbread_outfit.png" },
   { "name": "Heart of The Forest", "category": "Overlays", "price": "4-5.5m", "value": 4.75, "status": "🟣", "image": "images/heart_of_the_forest.png" },
