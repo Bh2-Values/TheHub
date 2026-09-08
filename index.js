@@ -16,9 +16,10 @@ const SCRIPT_URL = "https://raw.githubusercontent.com/BH2-Values/TheHub/main/scr
 client.on('ready', () => {
   console.log(`Values Bot is now online as ${client.user.tag}`);
   
-  // Establece el estado personalizado del bot
-  client.user.setActivity('BH2 Value List | !value', { 
-    type: ActivityType.Playing 
+  // Establece el estado correctamente usando setPresence
+  client.user.setPresence({
+    activities: [{ name: 'BH2 Value List | !value', type: ActivityType.Playing }],
+    status: 'online',
   });
 });
 
