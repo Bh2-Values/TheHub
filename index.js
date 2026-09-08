@@ -1,6 +1,19 @@
 const { Client, GatewayIntentBits, EmbedBuilder, ActivityType } = require('discord.js');
 const fetch = require('node-fetch');
 const vm = require('vm');
+const http = require('http'); // 1. Importa el módulo http nativo
+
+// --- SERVIDOR HTTP PARA RENDER ---
+const PORT = process.env.PORT || 3000;
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('Bot is running and alive!\n');
+});
+
+server.listen(PORT, () => {
+  console.log(`Servidor HTTP escuchando en el puerto ${PORT}`);
+});
+// ---------------------------------
 
 const client = new Client({
   intents: [
@@ -71,11 +84,21 @@ client.on('messageCreate', async (message) => {
 
       message.channel.send({ embeds: [embed] });
 
+    } else (err) => { // Pequeño apunte: en tu código original tenías un 'catch (err)' mal cerrado o escrito con 'else', asegúrate de mantener el catch tal y como estaba abajo.
+      console.error(err);
+      message.reply("An error occurred while checking the value.");
+    }
+  }
+});
+
+// Asegúrate de que el bloque try/catch de tu comando termine bien así:
+/*
     } catch (err) {
       console.error(err);
       message.reply("An error occurred while checking the value.");
     }
   }
 });
+*/
 
 client.login(BOT_TOKEN);
