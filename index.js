@@ -27,9 +27,10 @@ const client = new Client({
 const BOT_TOKEN = process.env.DISCORD_TOKEN;
 const SCRIPT_URL = "https://raw.githubusercontent.com/BH2-Values/TheHub/main/script.js";
 
-// Mapas para controlar los cooldowns (15 minutos cada uno)
+// Mapas para controlar los cooldowns
 const workCooldowns = new Map();
 const crimeCooldowns = new Map();
+const gambleCooldowns = new Map();
 
 client.on('ready', () => {
   console.log(`Values Bot is now online as ${client.user.tag}`);
@@ -44,9 +45,11 @@ client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
   const contentLower = message.content.toLowerCase();
+  const args = message.content.trim().split(/ +/);
+  const command = args[0].toLowerCase();
 
   // --- COMANDO: !bal o !balance (Ver dinero) ---
-  if (contentLower === '!bal' || contentLower === '!balance') {
+  if (command === '!bal' || command === '!balance') {
     let economy = {};
     if (fs.existsSync('economy.json')) {
       economy = JSON.parse(fs.readFileSync('economy.json', 'utf8'));
@@ -64,10 +67,10 @@ client.on('messageCreate', async (message) => {
     return message.channel.send({ embeds: [embedBal] });
   }
 
-  // --- COMANDO: !work (Ganar tokens con 15 min de cooldown) ---
-  if (contentLower === '!work') {
+  // --- COMANDO: !work (Ganar tokens con 3 min de cooldown) ---
+  if (command === '!work') {
     const userId = message.author.id;
-    const cooldownTime = 15 * 60 * 1000; // 15 minutos
+    const cooldownTime = 3 * 60 * 1000; // 3 minutos
     const now = Date.now();
 
     if (workCooldowns.has(userId)) {
@@ -110,8 +113,8 @@ client.on('messageCreate', async (message) => {
     return message.channel.send({ embeds: [embedWork] });
   }
 
-  // --- COMANDO: !crime (Riesgo: puedes ganar o perder tokens, 3 min cooldown) ---
-  if (contentLower === '!crime') {
+  // --- COMANDO: !crime (Riesgo: ganar o perder tokens, 3 min de cooldown) ---
+  if (command === '!crime') {
     const userId = message.author.id;
     const cooldownTime = 3 * 60 * 1000; // 3 minutos
     const now = Date.now();
@@ -156,7 +159,6 @@ client.on('messageCreate', async (message) => {
         .setColor(0x00FF66);
       return message.channel.send({ embeds: [embedCrime] });
     } else {
-      // Asegurarse de que no baje de 0 tokens
       economy[userId].tokens = Math.max(0, economy[userId].tokens - randomCrime.amount);
       fs.writeFileSync('economy.json', JSON.stringify(economy, null, 2));
 
@@ -168,17 +170,86 @@ client.on('messageCreate', async (message) => {
     }
   }
 
-  // --- COMANDO: !leader (Tabla de clasificación) ---
-  if (contentLower === '!leader') {
+  // --- COMANDO: !gamble (Apostar tokens con 5 segundos de cooldown) ---
+  if (command === '!gamble') {
+    const userId = message.author.id;
+    const cooldownTime = 5 * 1000; // 5 segundos
+    const now = Date.now();
+
+    if (gambleCooldowns.has(userId)) {
+      const expirationTime = gambleCooldowns.get(userId) + cooldownTime;
+      if (now < expirationTime) {
+        const timeLeft = ((expirationTime - now) / 1000).toFixed(1);
+        return message.reply(`⏳ Whoa, slow down! Wait **${timeLeft}s** before gambling again.`);
+      }
+    }
+
     let economy = {};
     if (fs.existsSync('economy.json')) {
       economy = JSON.parse(fs.readFileSync('economy.json', 'utf8'));
     }
 
-    // Ordenar a los usuarios por cantidad de tokens de mayor a menor
+    if (!economy[userId] || economy[userId].tokens <= 0) {
+      return message.reply("❌ You are completely broke! You need tokens to gamble. Use `!work` first.");
+    }
+
+    const userTokens = economy[userId].tokens;
+    const betArg = args[1];
+
+    if (!betArg) {
+      return message.reply("❌ Please specify how much you want to gamble! Example: `!gamble 500` or `!gamble all`");
+    }
+
+    let betAmount = 0;
+    if (betArg.toLowerCase() === 'all') {
+      betAmount = userTokens;
+    } else {
+      betAmount = parseInt(betArg);
+      if (isNaN(betAmount) || betAmount <= 0) {
+        return message.reply("❌ Please enter a valid number of tokens to gamble.");
+      }
+    }
+
+    if (betAmount > userTokens) {
+      return message.reply(`❌ You don't have that many tokens! Your current balance is **${userTokens} Tokens**.`);
+    }
+
+    gambleCooldowns.set(userId, now);
+
+    const win = Math.random() < 0.45;
+
+    if (win) {
+      const winnings = betAmount;
+      economy[userId].tokens += winnings;
+      fs.writeFileSync('economy.json', JSON.stringify(economy, null, 2));
+
+      const embedWin = new EmbedBuilder()
+        .setTitle(`🎲 Casino Royale - WIN!`)
+        .setDescription(`🎉 Luck was on your side! You risked **${betAmount} Tokens** and won **${winnings} Tokens**!\n\n💰 New Balance: **${economy[userId].tokens} Tokens**`)
+        .setColor(0x00FF66);
+      return message.channel.send({ embeds: [embedWin] });
+    } else {
+      economy[userId].tokens -= betAmount;
+      fs.writeFileSync('economy.json', JSON.stringify(economy, null, 2));
+
+      const embedLose = new EmbedBuilder()
+        .setTitle(`🎲 Casino Royale - LOSE!`)
+        .setDescription(`💸 Oof! The house always wins. You lost your bet of **${betAmount} Tokens**.\n\n💰 New Balance: **${economy[userId].tokens} Tokens**`)
+        .setColor(0xFF0000);
+      return message.channel.send({ embeds: [embedLose] });
+    }
+  }
+
+  // --- COMANDO: !leader (Tabla de clasificación) ---
+  if (command === '!leader') {
+    let economy = {};
+    if (fs.existsSync('economy.json')) {
+      economy = JSON.parse(fs.readFileSync('economy.json', 'utf8'));
+    }
+
     const sortedUsers = Object.entries(economy)
       .sort((a, b) => b[1].tokens - a[1].tokens)
-      .slice(0, 10); // Top 10
+      .slice(0, 10);
 
     if (sortedUsers.length === 0) {
       return message.reply("❌ No one has earned any tokens yet! Use `!work` to start.");
@@ -191,9 +262,7 @@ client.on('messageCreate', async (message) => {
       try {
         const user = await client.users.fetch(id);
         username = user.username;
-      } catch (e) {
-        // Si no se puede obtener el nombre, se queda con el ID
-      }
+      } catch (e) {}
 
       const medals = ['🥇', '🥈', '🥉'];
       const rankBadge = medals[i] || `\`#${i + 1}\``;
@@ -209,7 +278,7 @@ client.on('messageCreate', async (message) => {
     return message.channel.send({ embeds: [embedLeader] });
   }
 
-  // --- COMANDO: !value (si menciona a alguien, tasa a la persona; si pone texto, busca el ítem) ---
+  // --- COMANDO: !value ---
   if (contentLower.startsWith('!value')) {
     const mentionedUser = message.mentions.users.first();
 
