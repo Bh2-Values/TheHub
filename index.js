@@ -48,16 +48,26 @@ client.on('messageCreate', async (message) => {
     if (mentionedUser) {
       const categories = ['Server NPC', 'Whale', 'Professional Troll', 'Black Market Scam Artist', 'Tryhard', 'AFK Collector'];
       const statuses = ['Overvalued 📉', 'On Sale 🏷️', 'Priceless 💎', 'Bankrupt 💸', 'Duplicated ⚠️'];
+      
+      // Frases aleatorias para la descripción superior
+      const descriptions = [
+        'Official black market valuation of this user in BH2.',
+        'Extracted straight from the dark web trading logs.',
+        'Checked thoroughly by professional trade middlemen.',
+        'Warning: highly unstable asset, trade at your own risk.',
+        'Values verified by absolute zero reliable sources.'
+      ];
 
       const fakePrice = (Math.random() * 50000).toFixed(0);
       const valueM = (Math.random() * 100).toFixed(1);
       
       const randomCategory = categories[Math.floor(Math.random() * categories.length)];
       const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+      const randomDescription = descriptions[Math.floor(Math.random() * descriptions.length)];
 
       const embedValorar = new EmbedBuilder()
         .setTitle(`📊 Market Appraisal: ${mentionedUser.username}`)
-        .setDescription(`*Official black market valuation of this user in BH2.*`)
+        .setDescription(`*${randomDescription}*`)
         .setColor(0xFF0055)
         .setThumbnail(mentionedUser.displayAvatarURL({ dynamic: true, size: 256 }))
         .addFields(
@@ -118,7 +128,7 @@ client.on('messageCreate', async (message) => {
     }
   }
 
-  // --- COMANDO EXTRA: !valorar (también sirve por si acaso) ---
+  // --- COMANDO EXTRA: !valorar ---
   if (contentLower.startsWith('!valorar')) {
     const mentionedUser = message.mentions.users.first();
 
@@ -128,16 +138,24 @@ client.on('messageCreate', async (message) => {
 
     const categories = ['Server NPC', 'Whale', 'Professional Troll', 'Black Market Scam Artist', 'Tryhard', 'AFK Collector'];
     const statuses = ['Overvalued 📉', 'On Sale 🏷️', 'Priceless 💎', 'Bankrupt 💸', 'Duplicated ⚠️'];
+    const descriptions = [
+      'Official black market valuation of this user in BH2.',
+      'Extracted straight from the dark web trading logs.',
+      'Checked thoroughly by professional trade middlemen.',
+      'Warning: highly unstable asset, trade at your own risk.',
+      'Values verified by absolute zero reliable sources.'
+    ];
 
     const fakePrice = (Math.random() * 50000).toFixed(0);
     const valueM = (Math.random() * 100).toFixed(1);
     
     const randomCategory = categories[Math.floor(Math.random() * categories.length)];
     const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+    const randomDescription = descriptions[Math.floor(Math.random() * descriptions.length)];
 
     const embedValorar = new EmbedBuilder()
       .setTitle(`📊 Market Appraisal: ${mentionedUser.username}`)
-      .setDescription(`*Official black market valuation of this user in BH2.*`)
+      .setDescription(`*${randomDescription}*`)
       .setColor(0xFF0055)
       .setThumbnail(mentionedUser.displayAvatarURL({ dynamic: true, size: 256 }))
       .addFields(
