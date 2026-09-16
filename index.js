@@ -20,7 +20,8 @@ const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMembers
   ]
 });
 
@@ -84,22 +85,11 @@ client.on('messageCreate', async (message) => {
       return message.reply("❌ No tienes permisos para usar este comando.");
     }
 
-    // Obtener usuario por mención directa o por ID pura en el argumento 1
-    let targetUser = message.mentions.users.first();
-    if (!targetUser && args[1]) {
-      const cleanId = args[1].replace(/[^0-9]/g, '');
-      try {
-        targetUser = await client.users.fetch(cleanId);
-      } catch (e) {
-        targetUser = null;
-      }
-    }
-
-    // La cantidad siempre será el último argumento convertido a número
+    const targetUser = message.mentions.users.first();
     const amount = parseInt(args[args.length - 1]);
 
     if (!targetUser || isNaN(amount) || amount <= 0) {
-      return message.reply("❌ Uso correcto: `!give @usuario 500` o `!give <ID> 500`");
+      return message.reply("❌ Uso correcto: `!give @usuario 500`");
     }
 
     let user = await getUserBalance(targetUser.id);
@@ -120,16 +110,7 @@ client.on('messageCreate', async (message) => {
       return message.reply("❌ No tienes permisos para usar este comando.");
     }
 
-    let targetUser = message.mentions.users.first();
-    if (!targetUser && args[1]) {
-      const cleanId = args[1].replace(/[^0-9]/g, '');
-      try {
-        targetUser = await client.users.fetch(cleanId);
-      } catch (e) {
-        targetUser = null;
-      }
-    }
-
+    const targetUser = message.mentions.users.first();
     const amount = parseInt(args[args.length - 1]);
 
     if (!targetUser || isNaN(amount) || amount <= 0) {
