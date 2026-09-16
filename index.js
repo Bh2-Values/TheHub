@@ -110,10 +110,10 @@ client.on('messageCreate', async (message) => {
     return message.channel.send({ embeds: [embedWork] });
   }
 
-  // --- COMANDO: !crime (Riesgo: puedes ganar o perder tokens, 15 min cooldown) ---
+  // --- COMANDO: !crime (Riesgo: puedes ganar o perder tokens, 3 min cooldown) ---
   if (contentLower === '!crime') {
     const userId = message.author.id;
-    const cooldownTime = 15 * 60 * 1000; // 15 minutos
+    const cooldownTime = 3 * 60 * 1000; // 3 minutos
     const now = Date.now();
 
     if (crimeCooldowns.has(userId)) {
