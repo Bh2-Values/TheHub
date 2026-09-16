@@ -82,14 +82,14 @@ client.on('messageCreate', async (message) => {
     // --- COMANDO: !give (Solo Admins) ---
     if (command === '!give') {
       if (!ADMIN_IDS.includes(message.author.id)) {
-        return message.reply("❌ No tienes permisos para usar este comando.");
+        return message.reply("❌ You do not have permission to use this command.");
       }
 
       const targetUser = message.mentions.users.first();
       const amount = parseInt(args[args.length - 1]);
 
       if (!targetUser || isNaN(amount) || amount <= 0) {
-        return message.reply("❌ Uso correcto: `!give @usuario 500`");
+        return message.reply("❌ Correct usage: `!give @user 500`");
       }
 
       let user = await getUserBalance(targetUser.id);
@@ -98,7 +98,7 @@ client.on('messageCreate', async (message) => {
 
       const embedGive = new EmbedBuilder()
         .setTitle(`🪙 Tokens Added`)
-        .setDescription(`Se han añadido **${amount.toLocaleString()} Tokens** a **${targetUser.username}**.\n\n💰 Nuevo balance: **${user.tokens.toLocaleString()} Tokens**`)
+        .setDescription(`Successfully added **${amount.toLocaleString()} Tokens** to **${targetUser.username}**.\n\n💰 New balance: **${user.tokens.toLocaleString()} Tokens**`)
         .setColor(0x00FF66);
 
       return message.channel.send({ embeds: [embedGive] });
@@ -107,14 +107,14 @@ client.on('messageCreate', async (message) => {
     // --- COMANDO: !remove o !quitar (Solo Admins) ---
     if (command === '!remove' || command === '!quitar') {
       if (!ADMIN_IDS.includes(message.author.id)) {
-        return message.reply("❌ No tienes permisos para usar este comando.");
+        return message.reply("❌ You do not have permission to use this command.");
       }
 
       const targetUser = message.mentions.users.first();
       const amount = parseInt(args[args.length - 1]);
 
       if (!targetUser || isNaN(amount) || amount <= 0) {
-        return message.reply("❌ Uso correcto: `!remove @usuario 500` o `!quitar @usuario 500`");
+        return message.reply("❌ Correct usage: `!remove @user 500` or `!quitar @user 500`");
       }
 
       let user = await getUserBalance(targetUser.id);
@@ -123,7 +123,7 @@ client.on('messageCreate', async (message) => {
 
       const embedRemove = new EmbedBuilder()
         .setTitle(`🪙 Tokens Removed`)
-        .setDescription(`Se han retirado **${amount.toLocaleString()} Tokens** a **${targetUser.username}**.\n\n💰 Nuevo balance: **${user.tokens.toLocaleString()} Tokens**`)
+        .setDescription(`Successfully removed **${amount.toLocaleString()} Tokens** from **${targetUser.username}**.\n\n💰 New balance: **${user.tokens.toLocaleString()} Tokens**`)
         .setColor(0xFF0000);
 
       return message.channel.send({ embeds: [embedRemove] });
@@ -408,7 +408,7 @@ client.on('messageCreate', async (message) => {
 
   } catch (err) {
     console.error("Error ejecutando comando:", err);
-    return message.reply("❌ Hubo un error interno al ejecutar este comando.").catch(() => {});
+    return message.reply("❌ An internal error occurred while executing this command.").catch(() => {});
   }
 });
 
