@@ -49,13 +49,15 @@ client.on('messageCreate', async (message) => {
       const categories = ['Server NPC', 'Whale', 'Professional Troll', 'Black Market Scam Artist', 'Tryhard', 'AFK Collector'];
       const statuses = ['Overvalued 📉', 'On Sale 🏷️', 'Priceless 💎', 'Bankrupt 💸', 'Duplicated ⚠️'];
       
-      // Frases aleatorias para la descripción superior
+      // Frases gamberras y divertidas para la descripción superior
       const descriptions = [
-        'Official black market valuation of this user in BH2.',
-        'Extracted straight from the dark web trading logs.',
-        'Checked thoroughly by professional trade middlemen.',
-        'Warning: highly unstable asset, trade at your own risk.',
-        'Values verified by absolute zero reliable sources.'
+        'Bro is worth less than a broken toothpick.',
+        'Zero bitches detected, absolute negative value.',
+        'Certified clown moment, do not trade.',
+        'Absolute carry in games, total liability in real life.',
+        'Pure waste of server bandwidth.',
+        'Bro thinks he is the main character 💀',
+        'Selling this guy for 2 robux, any offers?'
       ];
 
       const fakePrice = (Math.random() * 50000).toFixed(0);
@@ -139,11 +141,13 @@ client.on('messageCreate', async (message) => {
     const categories = ['Server NPC', 'Whale', 'Professional Troll', 'Black Market Scam Artist', 'Tryhard', 'AFK Collector'];
     const statuses = ['Overvalued 📉', 'On Sale 🏷️', 'Priceless 💎', 'Bankrupt 💸', 'Duplicated ⚠️'];
     const descriptions = [
-      'Official black market valuation of this user in BH2.',
-      'Extracted straight from the dark web trading logs.',
-      'Checked thoroughly by professional trade middlemen.',
-      'Warning: highly unstable asset, trade at your own risk.',
-      'Values verified by absolute zero reliable sources.'
+      'Bro is worth less than a broken toothpick.',
+      'Zero bitches detected, absolute negative value.',
+      'Certified clown moment, do not trade.',
+      'Absolute carry in games, total liability in real life.',
+      'Pure waste of server bandwidth.',
+      'Bro thinks he is the main character 💀',
+      'Selling this guy for 2 robux, any offers?'
     ];
 
     const fakePrice = (Math.random() * 50000).toFixed(0);
