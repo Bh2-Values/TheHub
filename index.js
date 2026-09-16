@@ -40,6 +40,7 @@ client.on('messageCreate', async (message) => {
 
   const contentLower = message.content.toLowerCase();
 
+  // --- COMANDO: !value ---
   if (contentLower.startsWith('!value ')) {
     const query = contentLower.slice(7).trim();
 
@@ -85,6 +86,38 @@ client.on('messageCreate', async (message) => {
       console.error(err);
       message.reply("An error occurred while checking the value.");
     }
+  }
+
+  // --- NUEVO COMANDO: !valorar (en inglés) ---
+  if (contentLower.startsWith('!valorar')) {
+    const mentionedUser = message.mentions.users.first();
+
+    if (!mentionedUser) {
+      return message.reply("❌ You must mention someone! Example: `!valorar @user`");
+    }
+
+    const categories = ['Server NPC', 'Whale', 'Professional Troll', 'Black Market Scam Artist', 'Tryhard', 'AFK Collector'];
+    const statuses = ['Overvalued 📉', 'On Sale 🏷️', 'Priceless 💎', 'Bankrupt 💸', 'Duplicated ⚠️'];
+
+    const fakePrice = (Math.random() * 50000).toFixed(0);
+    const valueM = (Math.random() * 100).toFixed(1);
+    
+    const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+    const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+
+    const embedValorar = new EmbedBuilder()
+      .setTitle(`📊 Market Appraisal: ${mentionedUser.username}`)
+      .setDescription(`*Official black market valuation of this user in BH2.*`)
+      .setColor(0xFF0055)
+      .setThumbnail(mentionedUser.displayAvatarURL({ dynamic: true, size: 256 }))
+      .addFields(
+        { name: '💰 Estimated Value', value: `**${fakePrice} Tokens** (${valueM}m)`, inline: true },
+        { name: '🏷️ Category', value: randomCategory, inline: true },
+        { name: '📊 Current Status', value: randomStatus, inline: true }
+      )
+      .setFooter({ text: `Appraised on request of ${message.author.tag}`, iconURL: message.author.displayAvatarURL() });
+
+    return message.channel.send({ embeds: [embedValorar] });
   }
 });
 
