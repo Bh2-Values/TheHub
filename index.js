@@ -2,6 +2,7 @@ const { Client, GatewayIntentBits, EmbedBuilder, ActivityType } = require('disco
 const fetch = require('node-fetch');
 const vm = require('vm');
 const http = require('http');
+const fs = require('fs'); // <--- Añadido para guardar el dinero en un archivo local
 
 // --- SERVIDOR HTTP PARA RENDER ---
 const PORT = process.env.PORT || 3000;
@@ -39,6 +40,64 @@ client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
   const contentLower = message.content.toLowerCase();
+
+  // --- COMANDO: !bal o !balance (Ver dinero) ---
+  if (contentLower === '!bal' || contentLower === '!balance') {
+    let economy = {};
+    if (fs.existsSync('economy.json')) {
+      economy = JSON.parse(fs.readFileSync('economy.json', 'utf8'));
+    }
+
+    const userId = message.author.id;
+    const userTokens = economy[userId] ? economy[userId].tokens : 0;
+
+    const embedBal = new EmbedBuilder()
+      .setTitle(`💰 Balance of ${message.author.username}`)
+      .setDescription(`You currently have **${userTokens} Tokens** in your wallet.`)
+      .setColor(0xFFD700)
+      .setThumbnail(message.author.displayAvatarURL());
+
+    return message.channel.send({ embeds: [embedBal] });
+  }
+
+  // --- COMANDO: !work (Ganar tokens trabajando) ---
+  if (contentLower === '!work') {
+    let economy = {};
+    if (fs.existsSync('economy.json')) {
+      economy = JSON.parse(fs.readFileSync('economy.json', 'utf8'));
+    }
+
+    const userId = message.author.id;
+    
+    // Inicializar al usuario si no existe
+    if (!economy[userId]) {
+      economy[userId] = { tokens: 0 };
+    }
+
+    // Trabajos graciosos aleatorios
+    const jobs = [
+      { name: 'Discord Janitor', earned: Math.floor(Math.random() * 300) + 100 },
+      { name: 'Roblox Bug Tester', earned: Math.floor(Math.random() * 600) + 200 },
+      { name: 'Professional Glazer', earned: Math.floor(Math.random() * 500) + 150 },
+      { name: 'Lowball Trader', earned: Math.floor(Math.random() * 800) + 50 }
+    ];
+
+    const randomJob = jobs[Math.floor(Math.random() * jobs.length)];
+
+    // Sumar los tokens
+    economy[userId].tokens += randomJob.earned;
+
+    // Guardar en el archivo economy.json
+    fs.writeFileSync('economy.json', JSON.stringify(economy, null, 2));
+
+    const embedWork = new EmbedBuilder()
+      .setTitle(`🛠️ Work Shift Completed!`)
+      .setDescription(`You worked as a **${randomJob.name}** and earned **${randomJob.earned} Tokens**!`)
+      .setColor(0x00FF66)
+      .setFooter({ text: `Total balance updated.` });
+
+    return message.channel.send({ embeds: [embedWork] });
+  }
 
   // --- COMANDO: !value (si menciona a alguien, tasa a la persona; si pone texto, busca el ítem) ---
   if (contentLower.startsWith('!value')) {
