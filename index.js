@@ -55,18 +55,16 @@ client.on('messageCreate', async (message) => {
       economy = JSON.parse(fs.readFileSync('economy.json', 'utf8'));
     }
 
-    // Comprobar si se ha mencionado a alguien
     const targetUser = message.mentions.users.first() || message.author;
     const userId = targetUser.id;
     const userTokens = economy[userId] ? economy[userId].tokens : 0;
 
     const embedBal = new EmbedBuilder()
       .setTitle(`💰 Balance of ${targetUser.username}`)
-      .setDescription(`They currently have **${userTokens} Tokens** in their wallet.`) // O se adapta si eres tú, pero queda bien general
+      .setDescription(`They currently have **${userTokens} Tokens** in their wallet.`)
       .setColor(0xFFD700)
       .setThumbnail(targetUser.displayAvatarURL());
 
-    // Si es tu propio balance, ajustamos un poco el texto para que suene natural
     if (targetUser.id === message.author.id) {
       embedBal.setDescription(`You currently have **${userTokens} Tokens** in your wallet.`);
     }
@@ -177,7 +175,7 @@ client.on('messageCreate', async (message) => {
     }
   }
 
-  // --- COMANDO: !gamble (Apostar tokens con 5 segundos de cooldown) ---
+  // --- COMANDO: !gamble (Apostar tokens, 5s cooldown, 50/50 y Jackpot 0.1% de 10x) ---
   if (command === '!gamble') {
     const userId = message.author.id;
     const cooldownTime = 5 * 1000; // 5 segundos
@@ -223,7 +221,23 @@ client.on('messageCreate', async (message) => {
 
     gambleCooldowns.set(userId, now);
 
-    const win = Math.random() < 0.45;
+    // Comprobación de Jackpot (0.1% de probabilidad -> Math.random() < 0.001)
+    const hitJackpot = Math.random() < 0.001;
+
+    if (hitJackpot) {
+      const winnings = betAmount * 10;
+      economy[userId].tokens += winnings;
+      fs.writeFileSync('economy.json', JSON.stringify(economy, null, 2));
+
+      const embedJackpot = new EmbedBuilder()
+        .setTitle(`🎉 MEGA JACKPOT! 10X! 🎉`)
+        .setDescription(`💎 UNBELIEVABLE! You hit the 0.1% jackpot! You risked **${betAmount} Tokens** and multiplied it by 10, winning **${winnings} Tokens**!\n\n💰 New Balance: **${economy[userId].tokens} Tokens**`)
+        .setColor(0xFFD700);
+      return message.channel.send({ embeds: [embedJackpot] });
+    }
+
+    // Si no hay jackpot, tirada normal 50/50 (Math.random() < 0.5)
+    const win = Math.random() < 0.5;
 
     if (win) {
       const winnings = betAmount;
