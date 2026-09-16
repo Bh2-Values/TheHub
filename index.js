@@ -46,10 +46,25 @@ client.on('messageCreate', async (message) => {
 
     // Si el usuario puso una mención al lado de !value, hacemos la tarjeta graciosa
     if (mentionedUser) {
-      const categories = ['Server NPC', 'Whale', 'Professional Troll', 'Black Market Scam Artist', 'Tryhard', 'AFK Collector'];
-      const statuses = ['Overvalued 📉', 'On Sale 🏷️', 'Priceless 💎', 'Bankrupt 💸', 'Duplicated ⚠️'];
+      const categories = [
+        'Certified Clown 🤡', 
+        'Professional Beggar', 
+        'Lowballer Final Boss', 
+        'Midwit NPC', 
+        'Discord Mod in Training', 
+        'E-Date Addict', 
+        'Absolute Bot'
+      ];
       
-      // Frases gamberras y divertidas para la descripción superior
+      const statuses = [
+        'Will Scam You ⚠️', 
+        'Broke AF 💸', 
+        'Zero Braincells 🧠', 
+        'Glazing Hard 🧽', 
+        'AFK & Useless 💤', 
+        'Wanted by FBI 🚨'
+      ];
+
       const descriptions = [
         'Bro is worth less than a broken toothpick.',
         'Zero bitches detected, absolute negative value.',
@@ -138,8 +153,25 @@ client.on('messageCreate', async (message) => {
       return message.reply("❌ You must mention someone! Example: `!valorar @user`");
     }
 
-    const categories = ['Server NPC', 'Whale', 'Professional Troll', 'Black Market Scam Artist', 'Tryhard', 'AFK Collector'];
-    const statuses = ['Overvalued 📉', 'On Sale 🏷️', 'Priceless 💎', 'Bankrupt 💸', 'Duplicated ⚠️'];
+    const categories = [
+      'Certified Clown 🤡', 
+      'Professional Beggar', 
+      'Lowballer Final Boss', 
+      'Midwit NPC', 
+      'Discord Mod in Training', 
+      'E-Date Addict', 
+      'Absolute Bot'
+    ];
+    
+    const statuses = [
+      'Will Scam You ⚠️', 
+      'Broke AF 💸', 
+      'Zero Braincells 🧠', 
+      'Glazing Hard 🧽', 
+      'AFK & Useless 💤', 
+      'Wanted by FBI 🚨'
+    ];
+
     const descriptions = [
       'Bro is worth less than a broken toothpick.',
       'Zero bitches detected, absolute negative value.',
