@@ -84,13 +84,25 @@ client.on('messageCreate', async (message) => {
       return message.reply("❌ No tienes permisos para usar este comando.");
     }
 
-    // Detectar usuario por mención o por ID directa
-    const targetUser = message.mentions.users.first() || (args[1] ? await client.users.fetch(args[1]).catch(() => null) : null);
-    // Buscar el número en los argumentos (suele ser el último)
-    const amount = parseInt(args[args.length - 1]);
+    // Intentar sacar el usuario por mención o por ID directa en el argumento 1
+    let targetUser = message.mentions.users.first();
+    let amountArgIndex = 2;
+
+    if (!targetUser && args[1]) {
+      try {
+        const cleanId = args[1].replace(/[<@!>]/g, '');
+        targetUser = await client.users.fetch(cleanId);
+        amountArgIndex = 2;
+      } catch (e) {
+        targetUser = null;
+      }
+    }
+
+    // Si se mencionó, la cantidad suele estar en args[2], si se pasó ID en args[2] o args[1]
+    const amount = parseInt(args[amountArgIndex] || args[args.length - 1]);
 
     if (!targetUser || isNaN(amount) || amount <= 0) {
-      return message.reply("❌ Uso correcto: `!give @usuario 5` o `!give <ID_Usuario> 5`");
+      return message.reply("❌ Uso correcto: `!give @usuario 500` o `!give <ID> 500`");
     }
 
     let user = await getUserBalance(targetUser.id);
@@ -111,11 +123,23 @@ client.on('messageCreate', async (message) => {
       return message.reply("❌ No tienes permisos para usar este comando.");
     }
 
-    const targetUser = message.mentions.users.first() || (args[1] ? await client.users.fetch(args[1]).catch(() => null) : null);
-    const amount = parseInt(args[args.length - 1]);
+    let targetUser = message.mentions.users.first();
+    let amountArgIndex = 2;
+
+    if (!targetUser && args[1]) {
+      try {
+        const cleanId = args[1].replace(/[<@!>]/g, '');
+        targetUser = await client.users.fetch(cleanId);
+        amountArgIndex = 2;
+      } catch (e) {
+        targetUser = null;
+      }
+    }
+
+    const amount = parseInt(args[amountArgIndex] || args[args.length - 1]);
 
     if (!targetUser || isNaN(amount) || amount <= 0) {
-      return message.reply("❌ Uso correcto: `!remove @usuario 5` o `!quitar @usuario 5`");
+      return message.reply("❌ Uso correcto: `!remove @usuario 500` o `!quitar @usuario 500`");
     }
 
     let user = await getUserBalance(targetUser.id);
