@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, EmbedBuilder, ActivityType } = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ActivityType } = require('discord.js');
 const fetch = require('node-fetch');
 const vm = require('vm');
 const http = require('http');
@@ -48,7 +48,7 @@ client.on('messageCreate', async (message) => {
   const args = message.content.trim().split(/ +/);
   const command = args[0].toLowerCase();
 
-  // --- COMANDO: !bal o !balance (Ver dinero propio o de alguien mencionado) ---
+  // --- COMANDO: !bal o !balance ---
   if (command === '!bal' || command === '!balance') {
     let economy = {};
     if (fs.existsSync('economy.json')) {
@@ -66,16 +66,16 @@ client.on('messageCreate', async (message) => {
       .setThumbnail(targetUser.displayAvatarURL());
 
     if (targetUser.id === message.author.id) {
-      embedBal.setDescription(`You currently have **${userTokens} Tokens** in your wallet.`);
+      embedBal.setDescription(`You currently have **${userTokens} Tokens** in their wallet.`.replace('their', 'your'));
     }
 
     return message.channel.send({ embeds: [embedBal] });
   }
 
-  // --- COMANDO: !work (Ganar tokens con 3 min de cooldown) ---
+  // --- COMANDO: !work (3 min cooldown) ---
   if (command === '!work') {
     const userId = message.author.id;
-    const cooldownTime = 3 * 60 * 1000; // 3 minutos
+    const cooldownTime = 3 * 60 * 1000;
     const now = Date.now();
 
     if (workCooldowns.has(userId)) {
@@ -118,10 +118,10 @@ client.on('messageCreate', async (message) => {
     return message.channel.send({ embeds: [embedWork] });
   }
 
-  // --- COMANDO: !crime (Riesgo: ganar o perder tokens, 3 min de cooldown) ---
+  // --- COMANDO: !crime (3 min cooldown) ---
   if (command === '!crime') {
     const userId = message.author.id;
-    const cooldownTime = 3 * 60 * 1000; // 3 minutos
+    const cooldownTime = 3 * 60 * 1000;
     const now = Date.now();
 
     if (crimeCooldowns.has(userId)) {
@@ -175,10 +175,10 @@ client.on('messageCreate', async (message) => {
     }
   }
 
-  // --- COMANDO: !gamble (Apostar tokens, 5s cooldown, 50/50 y Jackpot 0.1% de 10x) ---
+  // --- COMANDO: !gamble (5s cooldown, 50/50 y Jackpot 0.1% de 10x) ---
   if (command === '!gamble') {
     const userId = message.author.id;
-    const cooldownTime = 5 * 1000; // 5 segundos
+    const cooldownTime = 5 * 1000;
     const now = Date.now();
 
     if (gambleCooldowns.has(userId)) {
@@ -221,7 +221,6 @@ client.on('messageCreate', async (message) => {
 
     gambleCooldowns.set(userId, now);
 
-    // Comprobación de Jackpot (0.1% de probabilidad -> Math.random() < 0.001)
     const hitJackpot = Math.random() < 0.001;
 
     if (hitJackpot) {
@@ -231,12 +230,11 @@ client.on('messageCreate', async (message) => {
 
       const embedJackpot = new EmbedBuilder()
         .setTitle(`🎉 MEGA JACKPOT! 10X! 🎉`)
-        .setDescription(`💎 UNBELIEVABLE! You hit the 0.1% jackpot! You risked **${betAmount} Tokens** and multiplied it by 10, winning **${winnings} Tokens**!\n\n💰 New Balance: **${economy[userId].tokens} Tokens**`)
+        .setDescription(`💎 UNBELIEVABLE! You hit the 0.1% jackpot! You risked **${betAmount} Tokens** and won **${winnings} Tokens**!\n\n💰 New Balance: **${economy[userId].tokens} Tokens**`)
         .setColor(0xFFD700);
       return message.channel.send({ embeds: [embedJackpot] });
     }
 
-    // Si no hay jackpot, tirada normal 50/50 (Math.random() < 0.5)
     const win = Math.random() < 0.5;
 
     if (win) {
@@ -261,7 +259,189 @@ client.on('messageCreate', async (message) => {
     }
   }
 
-  // --- COMANDO: !leader (Tabla de clasificación) ---
+  // --- COMANDO: !blackjack o !bj (Juego interactivo con botones) ---
+  if (command === '!blackjack' || command === '!bj') {
+    const userId = message.author.id;
+    let economy = {};
+    if (fs.existsSync('economy.json')) {
+      economy = JSON.parse(fs.readFileSync('economy.json', 'utf8'));
+    }
+
+    if (!economy[userId] || economy[userId].tokens <= 0) {
+      return message.reply("❌ You are broke! You need tokens to play Blackjack. Use `!work` first.");
+    }
+
+    const userTokens = economy[userId].tokens;
+    const betArg = args[1];
+
+    if (!betArg) {
+      return message.reply("❌ Please specify your bet! Example: `!bj 100` or `!bj all`");
+    }
+
+    let betAmount = 0;
+    if (betArg.toLowerCase() === 'all') {
+      betAmount = userTokens;
+    } else {
+      betAmount = parseInt(betArg);
+      if (isNaN(betAmount) || betAmount <= 0) {
+        return message.reply("❌ Please enter a valid number of tokens.");
+      }
+    }
+
+    if (betAmount > userTokens) {
+      return message.reply(`❌ You don't have enough tokens! Your balance is **${userTokens} Tokens**.`);
+    }
+
+    // Baraja y lógica de cartas
+    const suits = ['♠️', '♥️', '♦️', '♣️'];
+    const values = [
+      { name: '2', val: 2 }, { name: '3', val: 3 }, { name: '4', val: 4 }, 
+      { name: '5', val: 5 }, { name: '6', val: 6 }, { name: '7', val: 7 }, 
+      { name: '8', val: 8 }, { name: '9', val: 9 }, { name: '10', val: 10 }, 
+      { name: 'J', val: 10 }, { name: 'Q', val: 10 }, { name: 'K', val: 10 }, 
+      { name: 'A', val: 11 }
+    ];
+
+    function drawCard() {
+      const s = suits[Math.floor(Math.random() * suits.length)];
+      const v = values[Math.floor(Math.random() * values.length)];
+      return { display: `${v.name}${s}`, val: v.val };
+    }
+
+    function calculateHand(hand) {
+      let score = 0;
+      let aces = 0;
+      for (let card of hand) {
+        score += card.val;
+        if (card.val === 11) aces++;
+      }
+      while (score > 21 && aces > 0) {
+        score -= 10;
+        aces--;
+      }
+      return score;
+    }
+
+    let playerHand = [drawCard(), drawCard()];
+    let dealerHand = [drawCard(), drawCard()];
+
+    const initialPlayerScore = calculateHand(playerHand);
+    const initialDealerScore = calculateHand(dealerHand);
+
+    // Comprobación de Blackjack natural instantáneo
+    if (initialPlayerScore === 21) {
+      const winnings = Math.floor(betAmount * 1.5);
+      economy[userId].tokens += winnings;
+      fs.writeFileSync('economy.json', JSON.stringify(economy, null, 2));
+
+      const embedBJ = new EmbedBuilder()
+        .setTitle(`🃏 Blackjack!`)
+        .setDescription(`🎉 **Natural Blackjack!** You won **${winnings} Tokens**!\n\n**Your Hand:** ${playerHand.map(c => c.display).join(' ')} (21)\n**Dealer Hand:** ${dealerHand.map(c => c.display).join(' ')} (${initialDealerScore})\n\n💰 Balance: **${economy[userId].tokens} Tokens**`)
+        .setColor(0xFFD700);
+      return message.channel.send({ embeds: [embedBJ] });
+    }
+
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('bj_hit').setLabel('Hit').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId('bj_stand').setLabel('Stand').setStyle(ButtonStyle.Success)
+    );
+
+    const embedGame = new EmbedBuilder()
+      .setTitle(`🃏 Blackjack Table - ${message.author.username}`)
+      .addFields(
+        { name: 'Your Hand', value: `${playerHand.map(c => c.display).join(' ')} \n(Score: ${initialPlayerScore})`, inline: true },
+        { name: 'Dealer Hand', value: `${dealerHand[0].display} ❓ \n(Score: ?)`, inline: true }
+      )
+      .setColor(0x0099FF)
+      .setFooter({ text: `Bet: ${betAmount} Tokens` });
+
+    const gameMessage = await message.channel.send({ embeds: [embedGame], components: [row] });
+
+    const collector = gameMessage.createMessageComponentCollector({
+      filter: i => i.user.id === message.author.id,
+      time: 60000
+    });
+
+    collector.on('collect', async i => {
+      if (i.customId === 'bj_hit') {
+        playerHand.push(drawCard());
+        const playerScore = calculateHand(playerHand);
+
+        if (playerScore > 21) {
+          economy[userId].tokens -= betAmount;
+          fs.writeFileSync('economy.json', JSON.stringify(economy, null, 2));
+          collector.stop('bust');
+
+          const embedBust = new EmbedBuilder()
+            .setTitle(`🃏 Blackjack - BUST!`)
+            .setDescription(`💥 You went over 21 and busted! You lost **${betAmount} Tokens**.\n\n**Your Hand:** ${playerHand.map(c => c.display).join(' ')} (${playerScore})\n\n💰 Balance: **${economy[userId].tokens} Tokens**`)
+            .setColor(0xFF0000);
+          return i.update({ embeds: [embedBust], components: [] });
+        }
+
+        const updatedEmbed = new EmbedBuilder()
+          .setTitle(`🃏 Blackjack Table - ${message.author.username}`)
+          .addFields(
+            { name: 'Your Hand', value: `${playerHand.map(c => c.display).join(' ')} \n(Score: ${playerScore})`, inline: true },
+            { name: 'Dealer Hand', value: `${dealerHand[0].display} ❓ \n(Score: ?)`, inline: true }
+          )
+          .setColor(0x0099FF)
+          .setFooter({ text: `Bet: ${betAmount} Tokens` });
+
+        return i.update({ embeds: [updatedEmbed], components: [row] });
+      }
+
+      if (i.customId === 'bj_stand') {
+        collector.stop('stand');
+        let playerScore = calculateHand(playerHand);
+        let dealerScore = calculateHand(dealerHand);
+
+        while (dealerScore < 17) {
+          dealerHand.push(drawCard());
+          dealerScore = calculateHand(dealerHand);
+        }
+
+        let resultText = '';
+        let color = 0x00FF66;
+
+        if (dealerScore > 21 || playerScore > dealerScore) {
+          economy[userId].tokens += betAmount;
+          resultText = `🎉 You won **${betAmount} Tokens**!`;
+          color = 0x00FF66;
+        } else if (playerScore < dealerScore) {
+          economy[userId].tokens -= betAmount;
+          resultText = `💸 Dealer wins! You lost **${betAmount} Tokens**`;
+          color = 0xFF0000;
+        } else {
+          resultText = `🤝 Push! It's a tie, your money is back.`;
+          color = 0xFFD700;
+        }
+
+        fs.writeFileSync('economy.json', JSON.stringify(economy, null, 2));
+
+        const embedEnd = new EmbedBuilder()
+          .setTitle(`🃏 Blackjack - Result`)
+          .setDescription(`${resultText}\n\n**Your Hand:** ${playerHand.map(c => c.display).join(' ')} (${playerScore})\n**Dealer Hand:** ${dealerHand.map(c => c.display).join(' ')} (${dealerScore})\n\n💰 Balance: **${economy[userId].tokens} Tokens**`)
+          .setColor(color);
+
+        return i.update({ embeds: [embedEnd], components: [] });
+      }
+    });
+
+    collector.on('end', (collected, reason) => {
+      if (reason === 'time') {
+        economy[userId].tokens -= betAmount;
+        fs.writeFileSync('economy.json', JSON.stringify(economy, null, 2));
+        const embedTimeout = new EmbedBuilder()
+          .setTitle(`🃏 Blackjack - Timeout`)
+          .setDescription(`⏳ You took too long to play! Hand forfeited, lost **${betAmount} Tokens**.`)
+          .setColor(0xFF0000);
+        gameMessage.edit({ embeds: [embedTimeout], components: [] }).catch(() => {});
+      }
+    });
+  }
+
+  // --- COMANDO: !leader ---
   if (command === '!leader') {
     let economy = {};
     if (fs.existsSync('economy.json')) {
