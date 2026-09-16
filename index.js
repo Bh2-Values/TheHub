@@ -40,9 +40,39 @@ client.on('messageCreate', async (message) => {
 
   const contentLower = message.content.toLowerCase();
 
-  // --- COMANDO: !value ---
-  if (contentLower.startsWith('!value ')) {
-    const query = contentLower.slice(7).trim();
+  // --- COMANDO: !value (si menciona a alguien, tasa a la persona; si pone texto, busca el ítem) ---
+  if (contentLower.startsWith('!value')) {
+    const mentionedUser = message.mentions.users.first();
+
+    // Si el usuario puso una mención al lado de !value, hacemos la tarjeta graciosa
+    if (mentionedUser) {
+      const categories = ['Server NPC', 'Whale', 'Professional Troll', 'Black Market Scam Artist', 'Tryhard', 'AFK Collector'];
+      const statuses = ['Overvalued 📉', 'On Sale 🏷️', 'Priceless 💎', 'Bankrupt 💸', 'Duplicated ⚠️'];
+
+      const fakePrice = (Math.random() * 50000).toFixed(0);
+      const valueM = (Math.random() * 100).toFixed(1);
+      
+      const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+      const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+
+      const embedValorar = new EmbedBuilder()
+        .setTitle(`📊 Market Appraisal: ${mentionedUser.username}`)
+        .setDescription(`*Official black market valuation of this user in BH2.*`)
+        .setColor(0xFF0055)
+        .setThumbnail(mentionedUser.displayAvatarURL({ dynamic: true, size: 256 }))
+        .addFields(
+          { name: '💰 Estimated Value', value: `**${fakePrice} Tokens** (${valueM}m)`, inline: true },
+          { name: '🏷️ Category', value: randomCategory, inline: true },
+          { name: '📊 Current Status', value: randomStatus, inline: true }
+        )
+        .setFooter({ text: `Appraised on request of ${message.author.tag}`, iconURL: message.author.displayAvatarURL() });
+
+      return message.channel.send({ embeds: [embedValorar] });
+    }
+
+    // Si no menciona a nadie, funciona normal para buscar ítems
+    const query = contentLower.slice(6).trim();
+    if (!query) return message.reply("❌ Please provide an item name or mention a user!");
 
     try {
       const res = await fetch(SCRIPT_URL);
@@ -88,7 +118,7 @@ client.on('messageCreate', async (message) => {
     }
   }
 
-  // --- NUEVO COMANDO: !valorar (en inglés) ---
+  // --- COMANDO EXTRA: !valorar (también sirve por si acaso) ---
   if (contentLower.startsWith('!valorar')) {
     const mentionedUser = message.mentions.users.first();
 
