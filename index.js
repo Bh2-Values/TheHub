@@ -27,8 +27,9 @@ const client = new Client({
 const BOT_TOKEN = process.env.DISCORD_TOKEN;
 const SCRIPT_URL = "https://raw.githubusercontent.com/BH2-Values/TheHub/main/script.js";
 
-// Mapa para controlar los cooldowns (guardará el timestamp de cuándo pueden volver a trabajar)
+// Mapas para controlar los cooldowns (15 minutos cada uno)
 const workCooldowns = new Map();
+const crimeCooldowns = new Map();
 
 client.on('ready', () => {
   console.log(`Values Bot is now online as ${client.user.tag}`);
@@ -63,26 +64,22 @@ client.on('messageCreate', async (message) => {
     return message.channel.send({ embeds: [embedBal] });
   }
 
-  // --- COMANDO: !work (Ganar tokens trabajando con 15 min de cooldown) ---
+  // --- COMANDO: !work (Ganar tokens con 15 min de cooldown) ---
   if (contentLower === '!work') {
     const userId = message.author.id;
-    const cooldownTime = 15 * 60 * 1000; // 15 minutos en milisegundos
+    const cooldownTime = 15 * 60 * 1000; // 15 minutos
     const now = Date.now();
 
-    // Comprobar si el usuario está en cooldown
     if (workCooldowns.has(userId)) {
       const expirationTime = workCooldowns.get(userId) + cooldownTime;
-
       if (now < expirationTime) {
         const timeLeft = expirationTime - now;
         const minutesLeft = Math.floor(timeLeft / (1000 * 60));
         const secondsLeft = Math.floor((timeLeft % (1000 * 60)) / 1000);
-
-        return message.reply(`⏳ Whoa there! You are too tired to work again. Please wait **${minutesLeft}m ${secondsLeft}s** before working again.`);
+        return message.reply(`⏳ You are too tired to work! Please wait **${minutesLeft}m ${secondsLeft}s**.`);
       }
     }
 
-    // Si pasa el cooldown, guardamos el tiempo actual
     workCooldowns.set(userId, now);
 
     let economy = {};
@@ -90,12 +87,10 @@ client.on('messageCreate', async (message) => {
       economy = JSON.parse(fs.readFileSync('economy.json', 'utf8'));
     }
     
-    // Inicializar al usuario si no existe
     if (!economy[userId]) {
       economy[userId] = { tokens: 0 };
     }
 
-    // Trabajos graciosos aleatorios
     const jobs = [
       { name: 'Discord Janitor', earned: Math.floor(Math.random() * 300) + 100 },
       { name: 'Roblox Bug Tester', earned: Math.floor(Math.random() * 600) + 200 },
@@ -104,20 +99,114 @@ client.on('messageCreate', async (message) => {
     ];
 
     const randomJob = jobs[Math.floor(Math.random() * jobs.length)];
-
-    // Sumar los tokens
     economy[userId].tokens += randomJob.earned;
-
-    // Guardar en el archivo economy.json
     fs.writeFileSync('economy.json', JSON.stringify(economy, null, 2));
 
     const embedWork = new EmbedBuilder()
       .setTitle(`🛠️ Work Shift Completed!`)
       .setDescription(`You worked as a **${randomJob.name}** and earned **${randomJob.earned} Tokens**!`)
-      .setColor(0x00FF66)
-      .setFooter({ text: `Cooldown: 15 minutes before next shift.` });
+      .setColor(0x00FF66);
 
     return message.channel.send({ embeds: [embedWork] });
+  }
+
+  // --- COMANDO: !crime (Riesgo: puedes ganar o perder tokens, 15 min cooldown) ---
+  if (contentLower === '!crime') {
+    const userId = message.author.id;
+    const cooldownTime = 15 * 60 * 1000; // 15 minutos
+    const now = Date.now();
+
+    if (crimeCooldowns.has(userId)) {
+      const expirationTime = crimeCooldowns.get(userId) + cooldownTime;
+      if (now < expirationTime) {
+        const timeLeft = expirationTime - now;
+        const minutesLeft = Math.floor(timeLeft / (1000 * 60));
+        const secondsLeft = Math.floor((timeLeft % (1000 * 60)) / 1000);
+        return message.reply(`🚨 The police are still looking for you! Hide out for **${minutesLeft}m ${secondsLeft}s**.`);
+      }
+    }
+
+    crimeCooldowns.set(userId, now);
+
+    let economy = {};
+    if (fs.existsSync('economy.json')) {
+      economy = JSON.parse(fs.readFileSync('economy.json', 'utf8'));
+    }
+    
+    if (!economy[userId]) {
+      economy[userId] = { tokens: 0 };
+    }
+
+    const crimes = [
+      { success: true, text: 'You hacked a Roblox trading site and stole', amount: Math.floor(Math.random() * 1000) + 300 },
+      { success: true, text: 'You pickpocketed a random lowballer and got', amount: Math.floor(Math.random() * 600) + 200 },
+      { success: false, text: 'You got caught trying to steal limited items and had to pay a fine of', amount: Math.floor(Math.random() * 400) + 100 },
+      { success: false, text: 'The police busted your illegal trading ring. You lost', amount: Math.floor(Math.random() * 500) + 150 }
+    ];
+
+    const randomCrime = crimes[Math.floor(Math.random() * crimes.length)];
+
+    if (randomCrime.success) {
+      economy[userId].tokens += randomCrime.amount;
+      fs.writeFileSync('economy.json', JSON.stringify(economy, null, 2));
+
+      const embedCrime = new EmbedBuilder()
+        .setTitle(`🦹 Crime Successful!`)
+        .setDescription(`${randomCrime.text} **${randomCrime.amount} Tokens**!`)
+        .setColor(0x00FF66);
+      return message.channel.send({ embeds: [embedCrime] });
+    } else {
+      // Asegurarse de que no baje de 0 tokens
+      economy[userId].tokens = Math.max(0, economy[userId].tokens - randomCrime.amount);
+      fs.writeFileSync('economy.json', JSON.stringify(economy, null, 2));
+
+      const embedCrimeFail = new EmbedBuilder()
+        .setTitle(`🚔 Busted!`)
+        .setDescription(`${randomCrime.text} **${randomCrime.amount} Tokens**!`)
+        .setColor(0xFF0000);
+      return message.channel.send({ embeds: [embedCrimeFail] });
+    }
+  }
+
+  // --- COMANDO: !leader (Tabla de clasificación) ---
+  if (contentLower === '!leader') {
+    let economy = {};
+    if (fs.existsSync('economy.json')) {
+      economy = JSON.parse(fs.readFileSync('economy.json', 'utf8'));
+    }
+
+    // Ordenar a los usuarios por cantidad de tokens de mayor a menor
+    const sortedUsers = Object.entries(economy)
+      .sort((a, b) => b[1].tokens - a[1].tokens)
+      .slice(0, 10); // Top 10
+
+    if (sortedUsers.length === 0) {
+      return message.reply("❌ No one has earned any tokens yet! Use `!work` to start.");
+    }
+
+    let description = '';
+    for (let i = 0; i < sortedUsers.length; i++) {
+      const [id, data] = sortedUsers[i];
+      let username = `User ID: ${id}`;
+      try {
+        const user = await client.users.fetch(id);
+        username = user.username;
+      } catch (e) {
+        // Si no se puede obtener el nombre, se queda con el ID
+      }
+
+      const medals = ['🥇', '🥈', '🥉'];
+      const rankBadge = medals[i] || `\`#${i + 1}\``;
+      description += `${rankBadge} **${username}** — **${data.tokens} Tokens**\n`;
+    }
+
+    const embedLeader = new EmbedBuilder()
+      .setTitle(`🏆 Server Wealth Leaderboard`)
+      .setDescription(description)
+      .setColor(0xFFD700)
+      .setFooter({ text: 'Top richest traders in the server' });
+
+    return message.channel.send({ embeds: [embedLeader] });
   }
 
   // --- COMANDO: !value (si menciona a alguien, tasa a la persona; si pone texto, busca el ítem) ---
