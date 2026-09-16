@@ -346,9 +346,45 @@ client.on('messageCreate', async (message) => {
       const mentionedUser = message.mentions.users.first();
 
       if (mentionedUser) {
-        const categories = ['Certified Clown 🤡', 'Professional Beggar', 'Lowballer Final Boss', 'Midwit NPC'];
-        const statuses = ['Will Scam You ⚠️', 'Broke AF 💸', 'Zero Braincells 🧠'];
-        const descriptions = ['You are like a broken pencil—totally pointless.', 'Bro thinks he is the main character 💀'];
+        const categories = [
+          'Certified Clown 🤡', 
+          'Professional Beggar', 
+          'Lowballer Final Boss', 
+          'Midwit NPC', 
+          'Discord Mod in Training', 
+          'E-Date Addict', 
+          'Absolute Bot'
+        ];
+            
+        const statuses = [
+          'Will Scam You ⚠️', 
+          'Broke AF 💸', 
+          'Zero Braincells 🧠', 
+          'Glazing Hard 🧽', 
+          'AFK & Useless 💤', 
+          'Wanted by FBI 🚨'
+        ];
+
+        const descriptions = [
+          'You bring everyone so much joy, especially when you leave a room.',
+          'You are like a broken pencil—totally pointless.',
+          'You are as useful as a screen door on a submarine.',
+          'I look at you and think, “Two billion years of evolution, for this?”',
+          'You have a face that would make onions cry.',
+          'You are the human version of cramps.',
+          'Let’s play horse. I’ll be the front, and you can be yourself.',
+          'You just might be why the middle finger was invented in the first place.',
+          'The people who tolerate you daily are the real heroes.',
+          'You have your entire life to be an idiot. Why not take today off?',
+          'Why are you rolling your eyes? Looking for your brain?',
+          'Bro is worth less than a broken toothpick.',
+          'Zero bitches detected, absolute negative value.',
+          'Certified clown moment, do not trade.',
+          'Absolute carry in games, total liability in real life.',
+          'Pure waste of server bandwidth.',
+          'Bro thinks he is the main character 💀',
+          'Selling this guy for 2 robux, any offers?'
+        ];
 
         const fakePrice = (Math.random() * 50000).toFixed(0);
         const valueM = (Math.random() * 100).toFixed(1);
