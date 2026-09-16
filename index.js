@@ -84,22 +84,19 @@ client.on('messageCreate', async (message) => {
       return message.reply("❌ No tienes permisos para usar este comando.");
     }
 
-    // Intentar sacar el usuario por mención o por ID directa en el argumento 1
+    // Obtener usuario por mención directa o por ID pura en el argumento 1
     let targetUser = message.mentions.users.first();
-    let amountArgIndex = 2;
-
     if (!targetUser && args[1]) {
+      const cleanId = args[1].replace(/[^0-9]/g, '');
       try {
-        const cleanId = args[1].replace(/[<@!>]/g, '');
         targetUser = await client.users.fetch(cleanId);
-        amountArgIndex = 2;
       } catch (e) {
         targetUser = null;
       }
     }
 
-    // Si se mencionó, la cantidad suele estar en args[2], si se pasó ID en args[2] o args[1]
-    const amount = parseInt(args[amountArgIndex] || args[args.length - 1]);
+    // La cantidad siempre será el último argumento convertido a número
+    const amount = parseInt(args[args.length - 1]);
 
     if (!targetUser || isNaN(amount) || amount <= 0) {
       return message.reply("❌ Uso correcto: `!give @usuario 500` o `!give <ID> 500`");
@@ -124,19 +121,16 @@ client.on('messageCreate', async (message) => {
     }
 
     let targetUser = message.mentions.users.first();
-    let amountArgIndex = 2;
-
     if (!targetUser && args[1]) {
+      const cleanId = args[1].replace(/[^0-9]/g, '');
       try {
-        const cleanId = args[1].replace(/[<@!>]/g, '');
         targetUser = await client.users.fetch(cleanId);
-        amountArgIndex = 2;
       } catch (e) {
         targetUser = null;
       }
     }
 
-    const amount = parseInt(args[amountArgIndex] || args[args.length - 1]);
+    const amount = parseInt(args[args.length - 1]);
 
     if (!targetUser || isNaN(amount) || amount <= 0) {
       return message.reply("❌ Uso correcto: `!remove @usuario 500` o `!quitar @usuario 500`");
