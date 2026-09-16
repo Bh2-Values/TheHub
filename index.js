@@ -65,7 +65,19 @@ client.on('messageCreate', async (message) => {
         'Wanted by FBI 🚨'
       ];
 
+      // ¡Todas las frases juntas y mezcladas!
       const descriptions = [
+        'You bring everyone so much joy, especially when you leave a room.',
+        'You are like a broken pencil—totally pointless.',
+        'You are as useful as a screen door on a submarine.',
+        'I look at you and think, “Two billion years of evolution, for this?”',
+        'You have a face that would make onions cry.',
+        'You are the human version of cramps.',
+        'Let’s play horse. I’ll be the front, and you can be yourself.',
+        'You just might be why the middle finger was invented in the first place.',
+        'The people who tolerate you daily are the real heroes.',
+        'You have your entire life to be an idiot. Why not take today off?',
+        'Why are you rolling your eyes? Looking for your brain?',
         'Bro is worth less than a broken toothpick.',
         'Zero bitches detected, absolute negative value.',
         'Certified clown moment, do not trade.',
@@ -173,6 +185,17 @@ client.on('messageCreate', async (message) => {
     ];
 
     const descriptions = [
+      'You bring everyone so much joy, especially when you leave a room.',
+      'You are like a broken pencil—totally pointless.',
+      'You are as useful as a screen door on a submarine.',
+      'I look at you and think, “Two billion years of evolution, for this?”',
+      'You have a face that would make onions cry.',
+      'You are the human version of cramps.',
+      'Let’s play horse. I’ll be the front, and you can be yourself.',
+      'You just might be why the middle finger was invented in the first place.',
+      'The people who tolerate you daily are the real heroes.',
+      'You have your entire life to be an idiot. Why not take today off?',
+      'Why are you rolling your eyes? Looking for your brain?',
       'Bro is worth less than a broken toothpick.',
       'Zero bitches detected, absolute negative value.',
       'Certified clown moment, do not trade.',
