@@ -66,7 +66,7 @@ client.on('messageCreate', async (message) => {
       .setThumbnail(targetUser.displayAvatarURL());
 
     if (targetUser.id === message.author.id) {
-      embedBal.setDescription(`You currently have **${userTokens} Tokens** in their wallet.`.replace('their', 'your'));
+      embedBal.setDescription(`You currently have **${userTokens} Tokens** in your wallet.`);
     }
 
     return message.channel.send({ embeds: [embedBal] });
@@ -259,7 +259,7 @@ client.on('messageCreate', async (message) => {
     }
   }
 
-  // --- COMANDO: !blackjack o !bj (Juego interactivo con botones) ---
+  // --- COMANDO: !blackjack o !bj ---
   if (command === '!blackjack' || command === '!bj') {
     const userId = message.author.id;
     let economy = {};
@@ -292,7 +292,6 @@ client.on('messageCreate', async (message) => {
       return message.reply(`❌ You don't have enough tokens! Your balance is **${userTokens} Tokens**.`);
     }
 
-    // Baraja y lógica de cartas
     const suits = ['♠️', '♥️', '♦️', '♣️'];
     const values = [
       { name: '2', val: 2 }, { name: '3', val: 3 }, { name: '4', val: 4 }, 
@@ -328,7 +327,6 @@ client.on('messageCreate', async (message) => {
     const initialPlayerScore = calculateHand(playerHand);
     const initialDealerScore = calculateHand(dealerHand);
 
-    // Comprobación de Blackjack natural instantáneo
     if (initialPlayerScore === 21) {
       const winnings = Math.floor(betAmount * 1.5);
       economy[userId].tokens += winnings;
@@ -441,7 +439,7 @@ client.on('messageCreate', async (message) => {
     });
   }
 
-  // --- COMANDO: !leader ---
+  // --- COMANDO: !leader (Estilo Pro / UnrealevaBoat) ---
   if (command === '!leader') {
     let economy = {};
     if (fs.existsSync('economy.json')) {
@@ -449,32 +447,36 @@ client.on('messageCreate', async (message) => {
     }
 
     const sortedUsers = Object.entries(economy)
-      .sort((a, b) => b[1].tokens - a[1].tokens)
-      .slice(0, 10);
+      .sort((a, b) => b[1].tokens - a[1].tokens);
 
     if (sortedUsers.length === 0) {
       return message.reply("❌ No one has earned any tokens yet! Use `!work` to start.");
     }
 
+    // Encontrar la posición exacta del usuario que ejecuta el comando (1-indexed)
+    const userIndex = sortedUsers.findIndex(([id]) => id === message.author.id);
+    const userRank = userIndex !== -1 ? `${userIndex + 1}º` : 'Unranked';
+
+    const top10 = sortedUsers.slice(0, 10);
     let description = '';
-    for (let i = 0; i < sortedUsers.length; i++) {
-      const [id, data] = sortedUsers[i];
-      let username = `User ID: ${id}`;
+
+    for (let i = 0; i < top10.length; i++) {
+      const [id, data] = top10[i];
+      let username = `User_${id.slice(-4)}`;
       try {
         const user = await client.users.fetch(id);
         username = user.username;
       } catch (e) {}
 
-      const medals = ['🥇', '🥈', '🥉'];
-      const rankBadge = medals[i] || `\`#${i + 1}\``;
-      description += `${rankBadge} **${username}** — **${data.tokens} Tokens**\n`;
+      // Formato exacto tipo UnrealevaBoat con cajita de código en el nombre y moneda 🪙
+      description += `**${i + 1}.** \`${username}\` • 🪙 **${data.tokens.toLocaleString()}**\n`;
     }
 
     const embedLeader = new EmbedBuilder()
-      .setTitle(`🏆 Server Wealth Leaderboard`)
+      .setAuthor({ name: 'Leaderboard', iconURL: client.user.displayAvatarURL() })
       .setDescription(description)
-      .setColor(0xFFD700)
-      .setFooter({ text: 'Top richest traders in the server' });
+      .setColor(0x0099FF)
+      .setFooter({ text: `Your leaderboard rank: ${userRank}` });
 
     return message.channel.send({ embeds: [embedLeader] });
   }
