@@ -2,7 +2,7 @@ const { Client, GatewayIntentBits, EmbedBuilder, ActivityType } = require('disco
 const fetch = require('node-fetch');
 const vm = require('vm');
 const http = require('http');
-const fs = require('fs'); // <--- Añadido para guardar el dinero en un archivo local
+const fs = require('fs');
 
 // --- SERVIDOR HTTP PARA RENDER ---
 const PORT = process.env.PORT || 3000;
@@ -26,6 +26,9 @@ const client = new Client({
 
 const BOT_TOKEN = process.env.DISCORD_TOKEN;
 const SCRIPT_URL = "https://raw.githubusercontent.com/BH2-Values/TheHub/main/script.js";
+
+// Mapa para controlar los cooldowns (guardará el timestamp de cuándo pueden volver a trabajar)
+const workCooldowns = new Map();
 
 client.on('ready', () => {
   console.log(`Values Bot is now online as ${client.user.tag}`);
@@ -60,14 +63,32 @@ client.on('messageCreate', async (message) => {
     return message.channel.send({ embeds: [embedBal] });
   }
 
-  // --- COMANDO: !work (Ganar tokens trabajando) ---
+  // --- COMANDO: !work (Ganar tokens trabajando con 15 min de cooldown) ---
   if (contentLower === '!work') {
+    const userId = message.author.id;
+    const cooldownTime = 15 * 60 * 1000; // 15 minutos en milisegundos
+    const now = Date.now();
+
+    // Comprobar si el usuario está en cooldown
+    if (workCooldowns.has(userId)) {
+      const expirationTime = workCooldowns.get(userId) + cooldownTime;
+
+      if (now < expirationTime) {
+        const timeLeft = expirationTime - now;
+        const minutesLeft = Math.floor(timeLeft / (1000 * 60));
+        const secondsLeft = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+        return message.reply(`⏳ Whoa there! You are too tired to work again. Please wait **${minutesLeft}m ${secondsLeft}s** before working again.`);
+      }
+    }
+
+    // Si pasa el cooldown, guardamos el tiempo actual
+    workCooldowns.set(userId, now);
+
     let economy = {};
     if (fs.existsSync('economy.json')) {
       economy = JSON.parse(fs.readFileSync('economy.json', 'utf8'));
     }
-
-    const userId = message.author.id;
     
     // Inicializar al usuario si no existe
     if (!economy[userId]) {
@@ -94,7 +115,7 @@ client.on('messageCreate', async (message) => {
       .setTitle(`🛠️ Work Shift Completed!`)
       .setDescription(`You worked as a **${randomJob.name}** and earned **${randomJob.earned} Tokens**!`)
       .setColor(0x00FF66)
-      .setFooter({ text: `Total balance updated.` });
+      .setFooter({ text: `Cooldown: 15 minutes before next shift.` });
 
     return message.channel.send({ embeds: [embedWork] });
   }
@@ -103,7 +124,6 @@ client.on('messageCreate', async (message) => {
   if (contentLower.startsWith('!value')) {
     const mentionedUser = message.mentions.users.first();
 
-    // Si el usuario puso una mención al lado de !value, hacemos la tarjeta graciosa
     if (mentionedUser) {
       const categories = [
         'Certified Clown 🤡', 
@@ -124,7 +144,6 @@ client.on('messageCreate', async (message) => {
         'Wanted by FBI 🚨'
       ];
 
-      // ¡Todas las frases juntas y mezcladas!
       const descriptions = [
         'You bring everyone so much joy, especially when you leave a room.',
         'You are like a broken pencil—totally pointless.',
@@ -168,7 +187,6 @@ client.on('messageCreate', async (message) => {
       return message.channel.send({ embeds: [embedValorar] });
     }
 
-    // Si no menciona a nadie, funciona normal para buscar ítems
     const query = contentLower.slice(6).trim();
     if (!query) return message.reply("❌ Please provide an item name or mention a user!");
 
