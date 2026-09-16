@@ -84,11 +84,13 @@ client.on('messageCreate', async (message) => {
       return message.reply("❌ No tienes permisos para usar este comando.");
     }
 
-    const targetUser = message.mentions.users.first();
-    const amount = parseInt(args[2]);
+    // Detectar usuario por mención o por ID directa
+    const targetUser = message.mentions.users.first() || (args[1] ? await client.users.fetch(args[1]).catch(() => null) : null);
+    // Buscar el número en los argumentos (suele ser el último)
+    const amount = parseInt(args[args.length - 1]);
 
     if (!targetUser || isNaN(amount) || amount <= 0) {
-      return message.reply("❌ Uso correcto: `!give @usuario <cantidad>`");
+      return message.reply("❌ Uso correcto: `!give @usuario 5` o `!give <ID_Usuario> 5`");
     }
 
     let user = await getUserBalance(targetUser.id);
@@ -109,11 +111,11 @@ client.on('messageCreate', async (message) => {
       return message.reply("❌ No tienes permisos para usar este comando.");
     }
 
-    const targetUser = message.mentions.users.first();
-    const amount = parseInt(args[2]);
+    const targetUser = message.mentions.users.first() || (args[1] ? await client.users.fetch(args[1]).catch(() => null) : null);
+    const amount = parseInt(args[args.length - 1]);
 
     if (!targetUser || isNaN(amount) || amount <= 0) {
-      return message.reply("❌ Uso correcto: `!remove @usuario <cantidad>` o `!quitar @usuario <cantidad>`");
+      return message.reply("❌ Uso correcto: `!remove @usuario 5` o `!quitar @usuario 5`");
     }
 
     let user = await getUserBalance(targetUser.id);
@@ -496,7 +498,7 @@ client.on('messageCreate', async (message) => {
     });
   }
 
-  // --- COMANDO: !leader (Estilo Pro con MongoDB) ---
+  // --- COMANDO: !leader ---
   if (command === '!leader') {
     const allUsers = await UserEconomy.find().sort({ tokens: -1 });
 
