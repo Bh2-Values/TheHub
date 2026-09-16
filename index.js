@@ -48,21 +48,28 @@ client.on('messageCreate', async (message) => {
   const args = message.content.trim().split(/ +/);
   const command = args[0].toLowerCase();
 
-  // --- COMANDO: !bal o !balance (Ver dinero) ---
+  // --- COMANDO: !bal o !balance (Ver dinero propio o de alguien mencionado) ---
   if (command === '!bal' || command === '!balance') {
     let economy = {};
     if (fs.existsSync('economy.json')) {
       economy = JSON.parse(fs.readFileSync('economy.json', 'utf8'));
     }
 
-    const userId = message.author.id;
+    // Comprobar si se ha mencionado a alguien
+    const targetUser = message.mentions.users.first() || message.author;
+    const userId = targetUser.id;
     const userTokens = economy[userId] ? economy[userId].tokens : 0;
 
     const embedBal = new EmbedBuilder()
-      .setTitle(`💰 Balance of ${message.author.username}`)
-      .setDescription(`You currently have **${userTokens} Tokens** in your wallet.`)
+      .setTitle(`💰 Balance of ${targetUser.username}`)
+      .setDescription(`They currently have **${userTokens} Tokens** in their wallet.`) // O se adapta si eres tú, pero queda bien general
       .setColor(0xFFD700)
-      .setThumbnail(message.author.displayAvatarURL());
+      .setThumbnail(targetUser.displayAvatarURL());
+
+    // Si es tu propio balance, ajustamos un poco el texto para que suene natural
+    if (targetUser.id === message.author.id) {
+      embedBal.setDescription(`You currently have **${userTokens} Tokens** in your wallet.`);
+    }
 
     return message.channel.send({ embeds: [embedBal] });
   }
