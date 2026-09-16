@@ -2,7 +2,7 @@ const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder
 const fetch = require('node-fetch');
 const vm = require('vm');
 const http = require('http');
-const fs = require('fs');
+const mongoose = require('mongoose');
 
 // --- SERVIDOR HTTP PARA RENDER ---
 const PORT = process.env.PORT || 3000;
@@ -25,7 +25,37 @@ const client = new Client({
 });
 
 const BOT_TOKEN = process.env.DISCORD_TOKEN;
+const MONGO_URI = process.env.MONGO_URI; 
 const SCRIPT_URL = "https://raw.githubusercontent.com/BH2-Values/TheHub/main/script.js";
+
+// IDs autorizadas para dar y quitar monedas
+const ADMIN_IDS = ['597454574302920716', '689866741702197298'];
+
+// --- CONEXIÓN A MONGODB ---
+if (!MONGO_URI) {
+  console.log("⚠️ ADVERTENCIA: No se ha configurado la variable MONGO_URI. Las monedas se perderán al reiniciar.");
+} else {
+  mongoose.connect(MONGO_URI)
+    .then(() => console.log('📦 Conectado a MongoDB Atlas con éxito (Datos persistentes)'))
+    .catch(err => console.error('❌ Error al conectar a MongoDB:', err));
+}
+
+// Esquema de la economía para MongoDB
+const userSchema = new mongoose.Schema({
+  userId: { type: String, required: true, unique: true },
+  tokens: { type: Number, default: 0 }
+});
+const UserEconomy = mongoose.model('UserEconomy', userSchema);
+
+// Función auxiliar para obtener o crear el usuario en la BD
+async function getUserBalance(userId) {
+  let user = await UserEconomy.findOne({ userId });
+  if (!user) {
+    user = new UserEconomy({ userId, tokens: 0 });
+    await user.save();
+  }
+  return user;
+}
 
 // Mapas para controlar los cooldowns
 const workCooldowns = new Map();
@@ -48,25 +78,70 @@ client.on('messageCreate', async (message) => {
   const args = message.content.trim().split(/ +/);
   const command = args[0].toLowerCase();
 
-  // --- COMANDO: !bal o !balance ---
-  if (command === '!bal' || command === '!balance') {
-    let economy = {};
-    if (fs.existsSync('economy.json')) {
-      economy = JSON.parse(fs.readFileSync('economy.json', 'utf8'));
+  // --- COMANDO: !give (Solo Admins) ---
+  if (command === '!give') {
+    if (!ADMIN_IDS.includes(message.author.id)) {
+      return message.reply("❌ No tienes permisos para usar este comando.");
     }
 
+    const targetUser = message.mentions.users.first();
+    const amount = parseInt(args[2]);
+
+    if (!targetUser || isNaN(amount) || amount <= 0) {
+      return message.reply("❌ Uso correcto: `!give @usuario <cantidad>`");
+    }
+
+    let user = await getUserBalance(targetUser.id);
+    user.tokens += amount;
+    await user.save();
+
+    const embedGive = new EmbedBuilder()
+      .setTitle(`🪙 Tokens Added`)
+      .setDescription(`Se han añadido **${amount.toLocaleString()} Tokens** a **${targetUser.username}**.\n\n💰 Nuevo balance: **${user.tokens.toLocaleString()} Tokens**`)
+      .setColor(0x00FF66);
+
+    return message.channel.send({ embeds: [embedGive] });
+  }
+
+  // --- COMANDO: !remove o !quitar (Solo Admins) ---
+  if (command === '!remove' || command === '!quitar') {
+    if (!ADMIN_IDS.includes(message.author.id)) {
+      return message.reply("❌ No tienes permisos para usar este comando.");
+    }
+
+    const targetUser = message.mentions.users.first();
+    const amount = parseInt(args[2]);
+
+    if (!targetUser || isNaN(amount) || amount <= 0) {
+      return message.reply("❌ Uso correcto: `!remove @usuario <cantidad>` o `!quitar @usuario <cantidad>`");
+    }
+
+    let user = await getUserBalance(targetUser.id);
+    user.tokens = Math.max(0, user.tokens - amount);
+    await user.save();
+
+    const embedRemove = new EmbedBuilder()
+      .setTitle(`🪙 Tokens Removed`)
+      .setDescription(`Se han retirado **${amount.toLocaleString()} Tokens** a **${targetUser.username}**.\n\n💰 Nuevo balance: **${user.tokens.toLocaleString()} Tokens**`)
+      .setColor(0xFF0000);
+
+    return message.channel.send({ embeds: [embedRemove] });
+  }
+
+  // --- COMANDO: !bal o !balance ---
+  if (command === '!bal' || command === '!balance') {
     const targetUser = message.mentions.users.first() || message.author;
-    const userId = targetUser.id;
-    const userTokens = economy[userId] ? economy[userId].tokens : 0;
+    const userData = await getUserBalance(targetUser.id);
+    const userTokens = userData.tokens;
 
     const embedBal = new EmbedBuilder()
       .setTitle(`💰 Balance of ${targetUser.username}`)
-      .setDescription(`They currently have **${userTokens} Tokens** in their wallet.`)
+      .setDescription(`They currently have **${userTokens.toLocaleString()} Tokens** in their wallet.`)
       .setColor(0xFFD700)
       .setThumbnail(targetUser.displayAvatarURL());
 
     if (targetUser.id === message.author.id) {
-      embedBal.setDescription(`You currently have **${userTokens} Tokens** in your wallet.`);
+      embedBal.setDescription(`You currently have **${userTokens.toLocaleString()} Tokens** in your wallet.`);
     }
 
     return message.channel.send({ embeds: [embedBal] });
@@ -90,15 +165,6 @@ client.on('messageCreate', async (message) => {
 
     workCooldowns.set(userId, now);
 
-    let economy = {};
-    if (fs.existsSync('economy.json')) {
-      economy = JSON.parse(fs.readFileSync('economy.json', 'utf8'));
-    }
-    
-    if (!economy[userId]) {
-      economy[userId] = { tokens: 0 };
-    }
-
     const jobs = [
       { name: 'Discord Janitor', earned: Math.floor(Math.random() * 300) + 100 },
       { name: 'Roblox Bug Tester', earned: Math.floor(Math.random() * 600) + 200 },
@@ -107,8 +173,10 @@ client.on('messageCreate', async (message) => {
     ];
 
     const randomJob = jobs[Math.floor(Math.random() * jobs.length)];
-    economy[userId].tokens += randomJob.earned;
-    fs.writeFileSync('economy.json', JSON.stringify(economy, null, 2));
+    
+    let user = await getUserBalance(userId);
+    user.tokens += randomJob.earned;
+    await user.save();
 
     const embedWork = new EmbedBuilder()
       .setTitle(`🛠️ Work Shift Completed!`)
@@ -136,15 +204,6 @@ client.on('messageCreate', async (message) => {
 
     crimeCooldowns.set(userId, now);
 
-    let economy = {};
-    if (fs.existsSync('economy.json')) {
-      economy = JSON.parse(fs.readFileSync('economy.json', 'utf8'));
-    }
-    
-    if (!economy[userId]) {
-      economy[userId] = { tokens: 0 };
-    }
-
     const crimes = [
       { success: true, text: 'You hacked a Roblox trading site and stole', amount: Math.floor(Math.random() * 1000) + 300 },
       { success: true, text: 'You pickpocketed a random lowballer and got', amount: Math.floor(Math.random() * 600) + 200 },
@@ -153,10 +212,11 @@ client.on('messageCreate', async (message) => {
     ];
 
     const randomCrime = crimes[Math.floor(Math.random() * crimes.length)];
+    let user = await getUserBalance(userId);
 
     if (randomCrime.success) {
-      economy[userId].tokens += randomCrime.amount;
-      fs.writeFileSync('economy.json', JSON.stringify(economy, null, 2));
+      user.tokens += randomCrime.amount;
+      await user.save();
 
       const embedCrime = new EmbedBuilder()
         .setTitle(`🦹 Crime Successful!`)
@@ -164,8 +224,8 @@ client.on('messageCreate', async (message) => {
         .setColor(0x00FF66);
       return message.channel.send({ embeds: [embedCrime] });
     } else {
-      economy[userId].tokens = Math.max(0, economy[userId].tokens - randomCrime.amount);
-      fs.writeFileSync('economy.json', JSON.stringify(economy, null, 2));
+      user.tokens = Math.max(0, user.tokens - randomCrime.amount);
+      await user.save();
 
       const embedCrimeFail = new EmbedBuilder()
         .setTitle(`🚔 Busted!`)
@@ -175,7 +235,7 @@ client.on('messageCreate', async (message) => {
     }
   }
 
-  // --- COMANDO: !gamble (5s cooldown, 50/50 y Jackpot 0.1% de 10x) ---
+  // --- COMANDO: !gamble ---
   if (command === '!gamble') {
     const userId = message.author.id;
     const cooldownTime = 5 * 1000;
@@ -189,16 +249,12 @@ client.on('messageCreate', async (message) => {
       }
     }
 
-    let economy = {};
-    if (fs.existsSync('economy.json')) {
-      economy = JSON.parse(fs.readFileSync('economy.json', 'utf8'));
-    }
-
-    if (!economy[userId] || economy[userId].tokens <= 0) {
+    let user = await getUserBalance(userId);
+    if (user.tokens <= 0) {
       return message.reply("❌ You are completely broke! You need tokens to gamble. Use `!work` first.");
     }
 
-    const userTokens = economy[userId].tokens;
+    const userTokens = user.tokens;
     const betArg = args[1];
 
     if (!betArg) {
@@ -216,7 +272,7 @@ client.on('messageCreate', async (message) => {
     }
 
     if (betAmount > userTokens) {
-      return message.reply(`❌ You don't have that many tokens! Your current balance is **${userTokens} Tokens**.`);
+      return message.reply(`❌ You don't have that many tokens! Your current balance is **${userTokens.toLocaleString()} Tokens**.`);
     }
 
     gambleCooldowns.set(userId, now);
@@ -225,12 +281,12 @@ client.on('messageCreate', async (message) => {
 
     if (hitJackpot) {
       const winnings = betAmount * 10;
-      economy[userId].tokens += winnings;
-      fs.writeFileSync('economy.json', JSON.stringify(economy, null, 2));
+      user.tokens += winnings;
+      await user.save();
 
       const embedJackpot = new EmbedBuilder()
         .setTitle(`🎉 MEGA JACKPOT! 10X! 🎉`)
-        .setDescription(`💎 UNBELIEVABLE! You hit the 0.1% jackpot! You risked **${betAmount} Tokens** and won **${winnings} Tokens**!\n\n💰 New Balance: **${economy[userId].tokens} Tokens**`)
+        .setDescription(`💎 UNBELIEVABLE! You hit the 0.1% jackpot! You risked **${betAmount.toLocaleString()} Tokens** and won **${winnings.toLocaleString()} Tokens**!\n\n💰 New Balance: **${user.tokens.toLocaleString()} Tokens**`)
         .setColor(0xFFD700);
       return message.channel.send({ embeds: [embedJackpot] });
     }
@@ -239,21 +295,21 @@ client.on('messageCreate', async (message) => {
 
     if (win) {
       const winnings = betAmount;
-      economy[userId].tokens += winnings;
-      fs.writeFileSync('economy.json', JSON.stringify(economy, null, 2));
+      user.tokens += winnings;
+      await user.save();
 
       const embedWin = new EmbedBuilder()
         .setTitle(`🎲 Casino Royale - WIN!`)
-        .setDescription(`🎉 Luck was on your side! You risked **${betAmount} Tokens** and won **${winnings} Tokens**!\n\n💰 New Balance: **${economy[userId].tokens} Tokens**`)
+        .setDescription(`🎉 Luck was on your side! You risked **${betAmount.toLocaleString()} Tokens** and won **${winnings.toLocaleString()} Tokens**!\n\n💰 New Balance: **${user.tokens.toLocaleString()} Tokens**`)
         .setColor(0x00FF66);
       return message.channel.send({ embeds: [embedWin] });
     } else {
-      economy[userId].tokens -= betAmount;
-      fs.writeFileSync('economy.json', JSON.stringify(economy, null, 2));
+      user.tokens -= betAmount;
+      await user.save();
 
       const embedLose = new EmbedBuilder()
         .setTitle(`🎲 Casino Royale - LOSE!`)
-        .setDescription(`💸 Oof! The house always wins. You lost your bet of **${betAmount} Tokens**.\n\n💰 New Balance: **${economy[userId].tokens} Tokens**`)
+        .setDescription(`💸 Oof! The house always wins. You lost your bet of **${betAmount.toLocaleString()} Tokens**.\n\n💰 New Balance: **${user.tokens.toLocaleString()} Tokens**`)
         .setColor(0xFF0000);
       return message.channel.send({ embeds: [embedLose] });
     }
@@ -262,16 +318,13 @@ client.on('messageCreate', async (message) => {
   // --- COMANDO: !blackjack o !bj ---
   if (command === '!blackjack' || command === '!bj') {
     const userId = message.author.id;
-    let economy = {};
-    if (fs.existsSync('economy.json')) {
-      economy = JSON.parse(fs.readFileSync('economy.json', 'utf8'));
-    }
+    let user = await getUserBalance(userId);
 
-    if (!economy[userId] || economy[userId].tokens <= 0) {
+    if (user.tokens <= 0) {
       return message.reply("❌ You are broke! You need tokens to play Blackjack. Use `!work` first.");
     }
 
-    const userTokens = economy[userId].tokens;
+    const userTokens = user.tokens;
     const betArg = args[1];
 
     if (!betArg) {
@@ -289,7 +342,7 @@ client.on('messageCreate', async (message) => {
     }
 
     if (betAmount > userTokens) {
-      return message.reply(`❌ You don't have enough tokens! Your balance is **${userTokens} Tokens**.`);
+      return message.reply(`❌ You don't have enough tokens! Your balance is **${userTokens.toLocaleString()} Tokens**.`);
     }
 
     const suits = ['♠️', '♥️', '♦️', '♣️'];
@@ -329,12 +382,12 @@ client.on('messageCreate', async (message) => {
 
     if (initialPlayerScore === 21) {
       const winnings = Math.floor(betAmount * 1.5);
-      economy[userId].tokens += winnings;
-      fs.writeFileSync('economy.json', JSON.stringify(economy, null, 2));
+      user.tokens += winnings;
+      await user.save();
 
       const embedBJ = new EmbedBuilder()
         .setTitle(`🃏 Blackjack!`)
-        .setDescription(`🎉 **Natural Blackjack!** You won **${winnings} Tokens**!\n\n**Your Hand:** ${playerHand.map(c => c.display).join(' ')} (21)\n**Dealer Hand:** ${dealerHand.map(c => c.display).join(' ')} (${initialDealerScore})\n\n💰 Balance: **${economy[userId].tokens} Tokens**`)
+        .setDescription(`🎉 **Natural Blackjack!** You won **${winnings.toLocaleString()} Tokens**!\n\n**Your Hand:** ${playerHand.map(c => c.display).join(' ')} (21)\n**Dealer Hand:** ${dealerHand.map(c => c.display).join(' ')} (${initialDealerScore})\n\n💰 Balance: **${user.tokens.toLocaleString()} Tokens**`)
         .setColor(0xFFD700);
       return message.channel.send({ embeds: [embedBJ] });
     }
@@ -351,7 +404,7 @@ client.on('messageCreate', async (message) => {
         { name: 'Dealer Hand', value: `${dealerHand[0].display} ❓ \n(Score: ?)`, inline: true }
       )
       .setColor(0x0099FF)
-      .setFooter({ text: `Bet: ${betAmount} Tokens` });
+      .setFooter({ text: `Bet: ${betAmount.toLocaleString()} Tokens` });
 
     const gameMessage = await message.channel.send({ embeds: [embedGame], components: [row] });
 
@@ -361,18 +414,20 @@ client.on('messageCreate', async (message) => {
     });
 
     collector.on('collect', async i => {
+      let currentUser = await getUserBalance(userId);
+
       if (i.customId === 'bj_hit') {
         playerHand.push(drawCard());
         const playerScore = calculateHand(playerHand);
 
         if (playerScore > 21) {
-          economy[userId].tokens -= betAmount;
-          fs.writeFileSync('economy.json', JSON.stringify(economy, null, 2));
+          currentUser.tokens -= betAmount;
+          await currentUser.save();
           collector.stop('bust');
 
           const embedBust = new EmbedBuilder()
             .setTitle(`🃏 Blackjack - BUST!`)
-            .setDescription(`💥 You went over 21 and busted! You lost **${betAmount} Tokens**.\n\n**Your Hand:** ${playerHand.map(c => c.display).join(' ')} (${playerScore})\n\n💰 Balance: **${economy[userId].tokens} Tokens**`)
+            .setDescription(`💥 You went over 21 and busted! You lost **${betAmount.toLocaleString()} Tokens**.\n\n**Your Hand:** ${playerHand.map(c => c.display).join(' ')} (${playerScore})\n\n💰 Balance: **${currentUser.tokens.toLocaleString()} Tokens**`)
             .setColor(0xFF0000);
           return i.update({ embeds: [embedBust], components: [] });
         }
@@ -384,7 +439,7 @@ client.on('messageCreate', async (message) => {
             { name: 'Dealer Hand', value: `${dealerHand[0].display} ❓ \n(Score: ?)`, inline: true }
           )
           .setColor(0x0099FF)
-          .setFooter({ text: `Bet: ${betAmount} Tokens` });
+          .setFooter({ text: `Bet: ${betAmount.toLocaleString()} Tokens` });
 
         return i.update({ embeds: [updatedEmbed], components: [row] });
       }
@@ -403,72 +458,66 @@ client.on('messageCreate', async (message) => {
         let color = 0x00FF66;
 
         if (dealerScore > 21 || playerScore > dealerScore) {
-          economy[userId].tokens += betAmount;
-          resultText = `🎉 You won **${betAmount} Tokens**!`;
+          currentUser.tokens += betAmount;
+          resultText = `🎉 You won **${betAmount.toLocaleString()} Tokens**!`;
           color = 0x00FF66;
         } else if (playerScore < dealerScore) {
-          economy[userId].tokens -= betAmount;
-          resultText = `💸 Dealer wins! You lost **${betAmount} Tokens**`;
+          currentUser.tokens -= betAmount;
+          resultText = `💸 Dealer wins! You lost **${betAmount.toLocaleString()} Tokens**`;
           color = 0xFF0000;
         } else {
           resultText = `🤝 Push! It's a tie, your money is back.`;
           color = 0xFFD700;
         }
 
-        fs.writeFileSync('economy.json', JSON.stringify(economy, null, 2));
+        await currentUser.save();
 
         const embedEnd = new EmbedBuilder()
           .setTitle(`🃏 Blackjack - Result`)
-          .setDescription(`${resultText}\n\n**Your Hand:** ${playerHand.map(c => c.display).join(' ')} (${playerScore})\n**Dealer Hand:** ${dealerHand.map(c => c.display).join(' ')} (${dealerScore})\n\n💰 Balance: **${economy[userId].tokens} Tokens**`)
+          .setDescription(`${resultText}\n\n**Your Hand:** ${playerHand.map(c => c.display).join(' ')} (${playerScore})\n**Dealer Hand:** ${dealerHand.map(c => c.display).join(' ')} (${dealerScore})\n\n💰 Balance: **${currentUser.tokens.toLocaleString()} Tokens**`)
           .setColor(color);
 
         return i.update({ embeds: [embedEnd], components: [] });
       }
     });
 
-    collector.on('end', (collected, reason) => {
+    collector.on('end', async (collected, reason) => {
       if (reason === 'time') {
-        economy[userId].tokens -= betAmount;
-        fs.writeFileSync('economy.json', JSON.stringify(economy, null, 2));
+        let currentUser = await getUserBalance(userId);
+        currentUser.tokens -= betAmount;
+        await currentUser.save();
+
         const embedTimeout = new EmbedBuilder()
           .setTitle(`🃏 Blackjack - Timeout`)
-          .setDescription(`⏳ You took too long to play! Hand forfeited, lost **${betAmount} Tokens**.`)
+          .setDescription(`⏳ You took too long to play! Hand forfeited, lost **${betAmount.toLocaleString()} Tokens**.`)
           .setColor(0xFF0000);
         gameMessage.edit({ embeds: [embedTimeout], components: [] }).catch(() => {});
       }
     });
   }
 
-  // --- COMANDO: !leader (Estilo Pro / UnrealevaBoat) ---
+  // --- COMANDO: !leader (Estilo Pro con MongoDB) ---
   if (command === '!leader') {
-    let economy = {};
-    if (fs.existsSync('economy.json')) {
-      economy = JSON.parse(fs.readFileSync('economy.json', 'utf8'));
-    }
+    const allUsers = await UserEconomy.find().sort({ tokens: -1 });
 
-    const sortedUsers = Object.entries(economy)
-      .sort((a, b) => b[1].tokens - a[1].tokens);
-
-    if (sortedUsers.length === 0) {
+    if (allUsers.length === 0) {
       return message.reply("❌ No one has earned any tokens yet! Use `!work` to start.");
     }
 
-    // Encontrar la posición exacta del usuario que ejecuta el comando (1-indexed)
-    const userIndex = sortedUsers.findIndex(([id]) => id === message.author.id);
+    const userIndex = allUsers.findIndex(u => u.userId === message.author.id);
     const userRank = userIndex !== -1 ? `${userIndex + 1}º` : 'Unranked';
 
-    const top10 = sortedUsers.slice(0, 10);
+    const top10 = allUsers.slice(0, 10);
     let description = '';
 
     for (let i = 0; i < top10.length; i++) {
-      const [id, data] = top10[i];
-      let username = `User_${id.slice(-4)}`;
+      const data = top10[i];
+      let username = `User_${data.userId.slice(-4)}`;
       try {
-        const user = await client.users.fetch(id);
+        const user = await client.users.fetch(data.userId);
         username = user.username;
       } catch (e) {}
 
-      // Formato exacto tipo UnrealevaBoat con cajita de código en el nombre y moneda 🪙
       description += `**${i + 1}.** \`${username}\` • 🪙 **${data.tokens.toLocaleString()}**\n`;
     }
 
@@ -487,43 +536,19 @@ client.on('messageCreate', async (message) => {
 
     if (mentionedUser) {
       const categories = [
-        'Certified Clown 🤡', 
-        'Professional Beggar', 
-        'Lowballer Final Boss', 
-        'Midwit NPC', 
-        'Discord Mod in Training', 
-        'E-Date Addict', 
-        'Absolute Bot'
+        'Certified Clown 🤡', 'Professional Beggar', 'Lowballer Final Boss', 
+        'Midwit NPC', 'Discord Mod in Training', 'E-Date Addict', 'Absolute Bot'
       ];
-      
-      const statuses = [
-        'Will Scam You ⚠️', 
-        'Broke AF 💸', 
-        'Zero Braincells 🧠', 
-        'Glazing Hard 🧽', 
-        'AFK & Useless 💤', 
-        'Wanted by FBI 🚨'
-      ];
-
+      const statuses = ['Will Scam You ⚠️', 'Broke AF 💸', 'Zero Braincells 🧠', 'Glazing Hard 🧽', 'AFK & Useless 💤', 'Wanted by FBI 🚨'];
       const descriptions = [
         'You bring everyone so much joy, especially when you leave a room.',
         'You are like a broken pencil—totally pointless.',
         'You are as useful as a screen door on a submarine.',
         'I look at you and think, “Two billion years of evolution, for this?”',
         'You have a face that would make onions cry.',
-        'You are the human version of cramps.',
-        'Let’s play horse. I’ll be the front, and you can be yourself.',
-        'You just might be why the middle finger was invented in the first place.',
-        'The people who tolerate you daily are the real heroes.',
-        'You have your entire life to be an idiot. Why not take today off?',
-        'Why are you rolling your eyes? Looking for your brain?',
         'Bro is worth less than a broken toothpick.',
         'Zero bitches detected, absolute negative value.',
-        'Certified clown moment, do not trade.',
-        'Absolute carry in games, total liability in real life.',
-        'Pure waste of server bandwidth.',
-        'Bro thinks he is the main character 💀',
-        'Selling this guy for 2 robux, any offers?'
+        'Certified clown moment, do not trade.'
       ];
 
       const fakePrice = (Math.random() * 50000).toFixed(0);
@@ -573,7 +598,7 @@ client.on('messageCreate', async (message) => {
         .setTitle(`💎 ${foundItem.name}`)
         .setColor(0x00FF66)
         .addFields(
-          { name: '💰 Price / Value', value: `**${foundItem.price ?? 'N/A'}** (${foundItem.value ?? 'N/A'}m)`, inline: true },
+          { name: '💰 Price / Value', value: `**${foundItem.price ?? 'N/A'}** (${foundItem.value ?? 'N/Map'}m)`, inline: true },
           { name: '🏷️ Category', value: foundItem.category ?? 'N/A', inline: true },
           { name: '📊 Status', value: foundItem.status ?? 'N/A', inline: true }
         );
@@ -598,69 +623,27 @@ client.on('messageCreate', async (message) => {
   // --- COMANDO EXTRA: !valorar ---
   if (contentLower.startsWith('!valorar')) {
     const mentionedUser = message.mentions.users.first();
-
     if (!mentionedUser) {
       return message.reply("❌ You must mention someone! Example: `!valorar @user`");
     }
 
-    const categories = [
-      'Certified Clown 🤡', 
-      'Professional Beggar', 
-      'Lowballer Final Boss', 
-      'Midwit NPC', 
-      'Discord Mod in Training', 
-      'E-Date Addict', 
-      'Absolute Bot'
-    ];
-    
-    const statuses = [
-      'Will Scam You ⚠️', 
-      'Broke AF 💸', 
-      'Zero Braincells 🧠', 
-      'Glazing Hard 🧽', 
-      'AFK & Useless 💤', 
-      'Wanted by FBI 🚨'
-    ];
-
-    const descriptions = [
-      'You bring everyone so much joy, especially when you leave a room.',
-      'You are like a broken pencil—totally pointless.',
-      'You are as useful as a screen door on a submarine.',
-      'I look at you and think, “Two billion years of evolution, for this?”',
-      'You have a face that would make onions cry.',
-      'You are the human version of cramps.',
-      'Let’s play horse. I’ll be the front, and you can be yourself.',
-      'You just might be why the middle finger was invented in the first place.',
-      'The people who tolerate you daily are the real heroes.',
-      'You have your entire life to be an idiot. Why not take today off?',
-      'Why are you rolling your eyes? Looking for your brain?',
-      'Bro is worth less than a broken toothpick.',
-      'Zero bitches detected, absolute negative value.',
-      'Certified clown moment, do not trade.',
-      'Absolute carry in games, total liability in real life.',
-      'Pure waste of server bandwidth.',
-      'Bro thinks he is the main character 💀',
-      'Selling this guy for 2 robux, any offers?'
-    ];
+    const categories = ['Certified Clown 🤡', 'Professional Beggar', 'Lowballer Final Boss', 'Midwit NPC'];
+    const statuses = ['Will Scam You ⚠️', 'Broke AF 💸', 'Zero Braincells 🧠'];
+    const descriptions = ['You are like a broken pencil—totally pointless.', 'Bro thinks he is the main character 💀'];
 
     const fakePrice = (Math.random() * 50000).toFixed(0);
     const valueM = (Math.random() * 100).toFixed(1);
     
-    const randomCategory = categories[Math.floor(Math.random() * categories.length)];
-    const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
-    const randomDescription = descriptions[Math.floor(Math.random() * descriptions.length)];
-
     const embedValorar = new EmbedBuilder()
       .setTitle(`📊 Market Appraisal: ${mentionedUser.username}`)
-      .setDescription(`*${randomDescription}*`)
+      .setDescription(`*${descriptions[Math.floor(Math.random() * descriptions.length)]}*`)
       .setColor(0xFF0055)
       .setThumbnail(mentionedUser.displayAvatarURL({ dynamic: true, size: 256 }))
       .addFields(
         { name: '💰 Estimated Value', value: `**${fakePrice} Tokens** (${valueM}m)`, inline: true },
-        { name: '🏷️ Category', value: randomCategory, inline: true },
-        { name: '📊 Current Status', value: randomStatus, inline: true }
-      )
-      .setFooter({ text: `Appraised on request of ${message.author.tag}`, iconURL: message.author.displayAvatarURL() });
+        { name: '🏷️ Category', value: categories[Math.floor(Math.random() * categories.length)], inline: true },
+        { name: '📊 Current Status', value: statuses[Math.floor(Math.random() * statuses.length)], inline: true }
+      );
 
     return message.channel.send({ embeds: [embedValorar] });
   }
