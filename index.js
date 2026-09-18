@@ -29,7 +29,7 @@ const BOT_TOKEN = process.env.DISCORD_TOKEN;
 const MONGO_URI = process.env.MONGO_URI; 
 const SCRIPT_URL = "https://raw.githubusercontent.com/BH2-Values/TheHub/main/script.js";
 
-// IDs autorizadas para dar y quitar monedas
+// IDs autorizadas para comandos de Admin (add / remove)
 const ADMIN_IDS = ['597454574302920716', '689866741702197298'];
 
 // --- CACHÉ PARA EVITAR RATE LIMITS DE GITHUB ---
@@ -83,8 +83,8 @@ client.on('messageCreate', async (message) => {
   const contentLower = message.content.toLowerCase();
 
   try {
-    // --- COMANDO: !give (Solo Admins) ---
-    if (command === '!give') {
+    // --- COMANDO: !add (Solo Admins - Sin límite) ---
+    if (command === '!add') {
       if (!ADMIN_IDS.includes(message.author.id)) {
         return message.reply("❌ You do not have permission to use this command.");
       }
@@ -93,19 +93,19 @@ client.on('messageCreate', async (message) => {
       const amount = parseInt(args[args.length - 1]);
 
       if (!targetUser || isNaN(amount) || amount <= 0) {
-        return message.reply("❌ Correct usage: `!give @user 500`");
+        return message.reply("❌ Correct usage: `!add @user 500`");
       }
 
       let user = await getUserBalance(targetUser.id);
       user.tokens += amount;
       await user.save();
 
-      const embedGive = new EmbedBuilder()
+      const embedAdd = new EmbedBuilder()
         .setTitle(`🪙 Tokens Added`)
         .setDescription(`Successfully added **${amount.toLocaleString()} Tokens** to **${targetUser.username}**.\n\n💰 New balance: **${user.tokens.toLocaleString()} Tokens**`)
         .setColor(0x00FF66);
 
-      return message.channel.send({ embeds: [embedGive] });
+      return message.channel.send({ embeds: [embedAdd] });
     }
 
     // --- COMANDO: !remove o !quitar (Solo Admins) ---
@@ -131,6 +131,42 @@ client.on('messageCreate', async (message) => {
         .setColor(0xFF0000);
 
       return message.channel.send({ embeds: [embedRemove] });
+    }
+
+    // --- COMANDO: !give (Para todos los miembros - Limitado a su balance) ---
+    if (command === '!give') {
+      const targetUser = message.mentions.users.first();
+      const amount = parseInt(args[args.length - 1]);
+
+      if (!targetUser || isNaN(amount) || amount <= 0) {
+        return message.reply("❌ Correct usage: `!give @user 500`");
+      }
+
+      if (targetUser.id === message.author.id) {
+        return message.reply("❌ You cannot give tokens to yourself!");
+      }
+
+      let senderData = await getUserBalance(message.author.id);
+
+      if (senderData.tokens < amount) {
+        return message.reply(`❌ You don't have enough tokens to give! Your current balance is **${senderData.tokens.toLocaleString()} Tokens**.`);
+      }
+
+      let targetData = await getUserBalance(targetUser.id);
+
+      // Descontar al emisor y sumar al receptor
+      senderData.tokens -= amount;
+      targetData.tokens += amount;
+
+      await senderData.save();
+      await targetData.save();
+
+      const embedGive = new EmbedBuilder()
+        .setTitle(`🎁 Tokens Transferred`)
+        .setDescription(`You successfully gave **${amount.toLocaleString()} Tokens** to **${targetUser.username}**!\n\n💰 Your new balance: **${senderData.tokens.toLocaleString()} Tokens**`)
+        .setColor(0x00FF66);
+
+      return message.channel.send({ embeds: [embedGive] });
     }
 
     // --- COMANDO: !bal o !balance ---
@@ -383,7 +419,6 @@ client.on('messageCreate', async (message) => {
           : `${dealerHand[0].display} ❓`;
         const dealerScoreDisplay = gameOver ? calculateHand(dealerHand) : `${dealerHand[0].value} + ?`;
 
-        // CORRECCIÓN AQUÍ: Se usa .toLowerCase() para evitar problemas de mayúsculas/minúsculas
         const isWin = resultText.toLowerCase().includes('win');
 
         return new EmbedBuilder()
