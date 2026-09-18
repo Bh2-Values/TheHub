@@ -582,7 +582,7 @@ client.on('messageCreate', async (message) => {
           'E-Date Addict', 
           'Absolute Bot'
         ];
-          
+        
         const statuses = [
           'Will Scam You ⚠️', 
           'Broke AF 💸', 
