@@ -510,7 +510,7 @@ client.on('messageCreate', async (message) => {
             `**Winnings:** ${sessionWinnings >= 0 ? '+' : '-'}${Math.abs(sessionWinnings).toLocaleString()}\n\n` +
             `__{${resultText}}__`
           )
-          .setThumbnail('https://images.emojiterra.com/google/android-11/512px/1f3b0.png') // Miniatura decorativa de ruleta
+          .setThumbnail('https://media.discordapp.net/attachments/1530943368970899616/1550592788645679144/image.png?ex=6aaee591&is=6aad9411&hm=9e959877d74c33240a9f08bd0858d45ecab5a030d4c6248ca7261600bbda5ffe&=&format=webp&quality=lossless') // Miniatura decorativa de ruleta
           .setFooter({ text: `Bet: 🪙 ${betAmount.toLocaleString()} | Correct guess pays 2:1` });
       };
 
