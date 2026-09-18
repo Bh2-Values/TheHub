@@ -383,9 +383,12 @@ client.on('messageCreate', async (message) => {
           : `${dealerHand[0].display} ❓`;
         const dealerScoreDisplay = gameOver ? calculateHand(dealerHand) : `${dealerHand[0].value} + ?`;
 
+        // CORRECCIÓN AQUÍ: Se usa .toLowerCase() para evitar problemas de mayúsculas/minúsculas
+        const isWin = resultText.toLowerCase().includes('win');
+
         return new EmbedBuilder()
           .setTitle(`♠️ Blackjack Table - ${message.author.username}`)
-          .setColor(gameOver ? (resultText.includes('WIN') ? 0x00FF66 : 0xFF0000) : 0xFFD700)
+          .setColor(gameOver ? (isWin ? 0x00FF66 : 0xFF0000) : 0xFFD700)
           .setDescription(`**Result:** ${resultText}`)
           .addFields(
             { name: 'Your Hand', value: `${playerHand.map(c => c.display).join(' ')}\nValue: **${playerScore}**`, inline: true },
