@@ -1,6 +1,9 @@
 process.on('unhandledRejection', (error) => {
   console.error('❌ Error no capturado:', error);
 });
+process.on('uncaughtException', (error) => {
+  console.error('❌ Excepción no capturada:', error);
+});
 const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ActivityType } = require('discord.js');
 const fetch = require('node-fetch');
 const vm = require('vm');
