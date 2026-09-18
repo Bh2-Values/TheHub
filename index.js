@@ -115,19 +115,32 @@ client.on('messageCreate', async (message) => {
       }
 
       const targetUser = message.mentions.users.first();
-      const amount = parseInt(args[args.length - 1]);
+      const amountArg = args[args.length - 1];
 
-      if (!targetUser || isNaN(amount) || amount <= 0) {
-        return message.reply("❌ Correct usage: `!remove @user 500` or `!quitar @user 500`");
+      if (!targetUser || !amountArg) {
+        return message.reply("❌ Correct usage: `!remove @user 500` or `!remove @user all`");
       }
 
       let user = await getUserBalance(targetUser.id);
-      user.tokens = Math.max(0, user.tokens - amount);
+      let removedAmount = 0;
+
+      if (amountArg.toLowerCase() === 'all') {
+        removedAmount = user.tokens;
+        user.tokens = 0;
+      } else {
+        const amount = parseInt(amountArg);
+        if (isNaN(amount) || amount <= 0) {
+          return message.reply("❌ Please enter a valid number or `all` to remove tokens.");
+        }
+        removedAmount = amount;
+        user.tokens = Math.max(0, user.tokens - amount);
+      }
+
       await user.save();
 
       const embedRemove = new EmbedBuilder()
         .setTitle(`🪙 Tokens Removed`)
-        .setDescription(`Successfully removed **${amount.toLocaleString()} Tokens** from **${targetUser.username}**.\n\n💰 New balance: **${user.tokens.toLocaleString()} Tokens**`)
+        .setDescription(`Successfully removed **${removedAmount.toLocaleString()} Tokens** from **${targetUser.username}**.\n\n💰 New balance: **${user.tokens.toLocaleString()} Tokens**`)
         .setColor(0xFF0000);
 
       return message.channel.send({ embeds: [embedRemove] });
