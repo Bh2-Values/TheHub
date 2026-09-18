@@ -64,6 +64,7 @@ async function getUserBalance(userId) {
 const workCooldowns = new Map();
 const crimeCooldowns = new Map();
 const gambleCooldowns = new Map();
+const robCooldowns = new Map(); // Cooldown para el comando !rob
 
 client.on('ready', () => {
   console.log(`Values Bot is now online as ${client.user.tag}`);
@@ -167,7 +168,6 @@ client.on('messageCreate', async (message) => {
 
       let targetData = await getUserBalance(targetUser.id);
 
-      // Descontar al emisor y sumar al receptor
       senderData.tokens -= amount;
       targetData.tokens += amount;
 
@@ -180,6 +180,86 @@ client.on('messageCreate', async (message) => {
         .setColor(0x00FF66);
 
       return message.channel.send({ embeds: [embedGive] });
+    }
+
+    // --- COMANDO: !rob o !robar ---
+    if (command === '!rob' || command === '!robar') {
+      const userId = message.author.id;
+      const targetUser = message.mentions.users.first();
+
+      if (!targetUser) {
+        return message.reply("❌ Correct usage: `!rob @user`");
+      }
+
+      if (targetUser.id === userId) {
+        return message.reply("❌ You cannot rob yourself!");
+      }
+
+      // Cooldown de 15 minutos (15 * 60 * 1000 ms)
+      const cooldownTime = 15 * 60 * 1000;
+      const now = Date.now();
+
+      if (robCooldowns.has(userId)) {
+        const expirationTime = robCooldowns.get(userId) + cooldownTime;
+        if (now < expirationTime) {
+          const timeLeft = expirationTime - now;
+          const minutesLeft = Math.floor(timeLeft / (1000 * 60));
+          const secondsLeft = Math.floor((timeLeft % (1000 * 60)) / 1000);
+          return message.reply(`⏳ You are hiding from the police! Try robbing again in **${minutesLeft}m ${secondsLeft}s**.`);
+        }
+      }
+
+      let robberData = await getUserBalance(userId);
+      let targetData = await getUserBalance(targetUser.id);
+
+      // Comprobar que el objetivo tenga al menos algo que robar
+      if (targetData.tokens <= 0) {
+        return message.reply(`❌ **${targetUser.username}** is completely broke! There's nothing to steal from them.`);
+      }
+
+      // Comprobar que el ladrón tenga al menos lo mínimo para pagar una potencial multa (200 tokens)
+      if (robberData.tokens < 200) {
+        return message.reply(`❌ You are too poor to risk a robbery! You need at least **200 Tokens** in your wallet to cover potential fines.`);
+      }
+
+      robCooldowns.set(userId, now);
+
+      // 50% de probabilidad de éxito
+      const success = Math.random() < 0.5;
+
+      if (success) {
+        // Robar entre 67 y 1000 tokens (o lo que tenga el objetivo si tiene menos de 1000)
+        const maxPossible = Math.min(targetData.tokens, 1000);
+        const stolenAmount = Math.floor(Math.random() * (maxPossible - 67 + 1)) + 67;
+
+        targetData.tokens -= stolenAmount;
+        robberData.tokens += stolenAmount;
+
+        await targetData.save();
+        await robberData.save();
+
+        const embedRobWin = new EmbedBuilder()
+          .setTitle(`🥷 Successful Robbery!`)
+          .setDescription(`You successfully sneaked up on **${targetUser.username}** and stole **${stolenAmount.toLocaleString()} Tokens**!\n\n💰 Your new balance: **${robberData.tokens.toLocaleString()} Tokens**`)
+          .setColor(0x00FF66);
+
+        return message.channel.send({ embeds: [embedRobWin] });
+      } else {
+        // Fracaso: Pierde entre 200 y 500 tokens
+        const fineAmount = Math.floor(Math.random() * (500 - 200 + 1)) + 200;
+        // Asegurarse de no dejarlo en negativo
+        const actualFine = Math.min(robberData.tokens, fineAmount);
+
+        robberData.tokens = Math.max(0, robberData.tokens - actualFine);
+        await robberData.save();
+
+        const embedRobFail = new EmbedBuilder()
+          .setTitle(`🚨 Caught Red-Handed!`)
+          .setDescription(`You tried to rob **${targetUser.username}**, but got caught! You had to pay a fine of **${actualFine.toLocaleString()} Tokens**.\n\n💰 Your new balance: **${robberData.tokens.toLocaleString()} Tokens**`)
+          .setColor(0xFF0000);
+
+        return message.channel.send({ embeds: [embedRobFail] });
+      }
     }
 
     // --- COMANDO: !bal o !balance ---
@@ -389,7 +469,6 @@ client.on('messageCreate', async (message) => {
         return message.reply(`❌ You don't have that many tokens! Your current balance is **${user.tokens.toLocaleString()} Tokens**.`);
       }
 
-      // Descontar la apuesta inicial
       user.tokens -= betAmount;
       await user.save();
 
