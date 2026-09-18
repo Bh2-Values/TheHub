@@ -281,7 +281,7 @@ client.on('messageCreate', async (message) => {
         user.tokens += winnings;
         await user.save();
         const embedJackpot = new EmbedBuilder()
-          .setTitle(`🎉 MEGA JACKPOT! 10X! 🎉`)
+          .setTitle(`🎉🎉 MEGA JACKPOT! 10X! 🎉🎉`)
           .setDescription(`💎 UNBELIEVABLE! You hit the 0.1% jackpot! You risked **${betAmount.toLocaleString()} Tokens** and won **${winnings.toLocaleString()} Tokens**!\n\n💰 New Balance: **${user.tokens.toLocaleString()} Tokens**`)
           .setColor(0xFFD700);
         return message.channel.send({ embeds: [embedJackpot] });
