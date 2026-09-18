@@ -63,7 +63,6 @@ async function getUserBalance(userId) {
 
 const workCooldowns = new Map();
 const crimeCooldowns = new Map();
-const gambleCooldowns = new Map();
 const robCooldowns = new Map(); // Cooldown para el comando !rob
 
 client.on('ready', () => {
@@ -195,7 +194,6 @@ client.on('messageCreate', async (message) => {
         return message.reply("❌ You cannot rob yourself!");
       }
 
-      // Cooldown de 15 minutos (15 * 60 * 1000 ms)
       const cooldownTime = 15 * 60 * 1000;
       const now = Date.now();
 
@@ -212,23 +210,19 @@ client.on('messageCreate', async (message) => {
       let robberData = await getUserBalance(userId);
       let targetData = await getUserBalance(targetUser.id);
 
-      // Comprobar que el objetivo tenga al menos algo que robar
       if (targetData.tokens <= 0) {
         return message.reply(`❌ **${targetUser.username}** is completely broke! There's nothing to steal from them.`);
       }
 
-      // Comprobar que el ladrón tenga al menos lo mínimo para pagar una potencial multa (200 tokens)
       if (robberData.tokens < 200) {
         return message.reply(`❌ You are too poor to risk a robbery! You need at least **200 Tokens** in your wallet to cover potential fines.`);
       }
 
       robCooldowns.set(userId, now);
 
-      // 50% de probabilidad de éxito
       const success = Math.random() < 0.5;
 
       if (success) {
-        // Robar entre 67 y 1000 tokens (o lo que tenga el objetivo si tiene menos de 1000)
         const maxPossible = Math.min(targetData.tokens, 1000);
         const stolenAmount = Math.floor(Math.random() * (maxPossible - 67 + 1)) + 67;
 
@@ -245,9 +239,7 @@ client.on('messageCreate', async (message) => {
 
         return message.channel.send({ embeds: [embedRobWin] });
       } else {
-        // Fracaso: Pierde entre 200 y 500 tokens
         const fineAmount = Math.floor(Math.random() * (500 - 200 + 1)) + 200;
-        // Asegurarse de no dejarlo en negativo
         const actualFine = Math.min(robberData.tokens, fineAmount);
 
         robberData.tokens = Math.max(0, robberData.tokens - actualFine);
@@ -366,79 +358,118 @@ client.on('messageCreate', async (message) => {
       }
     }
 
-    // --- COMANDO: !gamble ---
-    if (command === '!gamble') {
+    // --- COMANDO: !cointoss (Interactive GUI inspired by Dank Memer style) ---
+    if (command === '!cointoss' || command === '!ct') {
       const userId = message.author.id;
-      const cooldownTime = 5 * 1000;
-      const now = Date.now();
-
-      if (gambleCooldowns.has(userId)) {
-        const expirationTime = gambleCooldowns.get(userId) + cooldownTime;
-        if (now < expirationTime) {
-          const timeLeft = ((expirationTime - now) / 1000).toFixed(1);
-          return message.reply(`⏳ Whoa, slow down! Wait **${timeLeft}s** before gambling again.`);
-        }
-      }
-
       let user = await getUserBalance(userId);
+      
       if (user.tokens <= 0) {
-        return message.reply("❌ You are completely broke! You need tokens to gamble. Use `!work` first.");
+        return message.reply("❌ You are completely broke! You need tokens to play Coin Toss. Use `!work` first.");
       }
 
-      const userTokens = user.tokens;
+      let betAmount = 10000; // Default bet amount if not specified
       const betArg = args[1];
-
-      if (!betArg) {
-        return message.reply("❌ Please specify how much you want to gamble! Example: `!gamble 500` or `!gamble all`");
-      }
-
-      let betAmount = 0;
-      if (betArg.toLowerCase() === 'all') {
-        betAmount = userTokens;
-      } else {
-        betAmount = parseInt(betArg);
-        if (isNaN(betAmount) || betAmount <= 0) {
-          return message.reply("❌ Please enter a valid number of tokens to gamble.");
+      
+      if (betArg) {
+        if (betArg.toLowerCase() === 'all') {
+          betAmount = user.tokens;
+        } else {
+          betAmount = parseInt(betArg);
+          if (isNaN(betAmount) || betAmount <= 0) {
+            return message.reply("❌ Please enter a valid number of tokens to bet.");
+          }
         }
       }
 
-      if (betAmount > userTokens) {
-        return message.reply(`❌ You don't have that many tokens! Your current balance is **${userTokens.toLocaleString()} Tokens**.`);
+      if (betAmount > user.tokens) {
+        return message.reply(`❌ You don't have that many tokens! Your current balance is **${user.tokens.toLocaleString()} Tokens**.`);
       }
 
-      gambleCooldowns.set(userId, now);
+      let sessionWinnings = 0;
 
-      const hitJackpot = Math.random() < 0.001;
-      if (hitJackpot) {
-        const winnings = betAmount * 10;
-        user.tokens += winnings;
-        await user.save();
-        const embedJackpot = new EmbedBuilder()
-          .setTitle(`🎉 MEGA JACKPOT! 10X! 🎉`)
-          .setDescription(`💎 UNBELIEVABLE! You hit the 0.1% jackpot! You risked **${betAmount.toLocaleString()} Tokens** and won **${winnings.toLocaleString()} Tokens**!\n\n💰 New Balance: **${user.tokens.toLocaleString()} Tokens**`)
-          .setColor(0xFFD700);
-        return message.channel.send({ embeds: [embedJackpot] });
-      }
+      const generateCoinEmbed = (resultText = "Choose Heads or Tails using the buttons below.", color = 0xED4245) => {
+        return new EmbedBuilder()
+          .setColor(color) // Red accent border like the reference
+          .setTitle(`🪙 ${message.author.username}'s Coin Toss`)
+          .setDescription(
+            `**Pocket:** ${user.tokens.toLocaleString()}\n` +
+            `**Winnings:** ${sessionWinnings >= 0 ? '+' : '-'}${Math.abs(sessionWinnings).toLocaleString()}\n\n` +
+            `__{${resultText}}__`
+          )
+          .setFooter({ text: `Bet: 🪙 ${betAmount.toLocaleString()} | Correct: 2x` });
+      };
 
-      const win = Math.random() < 0.5;
-      if (win) {
-        const winnings = betAmount;
-        user.tokens += winnings;
-        await user.save();
-        const embedWin = new EmbedBuilder()
-          .setTitle(`🎲 Casino Royale - WIN!`)
-          .setDescription(`🎉 Luck was on your side! You risked **${betAmount.toLocaleString()} Tokens** and won **${winnings.toLocaleString()} Tokens**!\n\n💰 New Balance: **${user.tokens.toLocaleString()} Tokens**`)
-          .setColor(0x00FF66);
-        return message.channel.send({ embeds: [embedWin] });
-      } else {
-        user.tokens -= betAmount;
-        await user.save();
-        const embedLose = new EmbedBuilder()
-          .setTitle(`🎲 Casino Royale - LOSE!`)
-          .setDescription(`💸 Oof! The house always wins. You lost your bet of **${betAmount.toLocaleString()} Tokens**.\n\n💰 New Balance: **${user.tokens.toLocaleString()} Tokens**`)
-          .setColor(0xFF0000);
-        return message.channel.send({ embeds: [embedLose] });
-      }
+      const getCoinButtons = (disabled = false) => {
+        return new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setCustomId('ct_heads').setLabel('Heads').setStyle(ButtonStyle.Primary).setDisabled(disabled),
+          new ButtonBuilder().setCustomId('ct_tails').setLabel('Tails').setStyle(ButtonStyle.Secondary).setDisabled(disabled),
+          new ButtonBuilder().setCustomId('ct_change').setLabel('Change Bet').setStyle(ButtonStyle.Secondary).setDisabled(disabled),
+          new ButtonBuilder().setCustomId('ct_stop').setEmoji('⚠️').setStyle(ButtonStyle.Secondary).setDisabled(disabled)
+        );
+      };
+
+      const initialMsg = await message.channel.send({
+        embeds: [generateCoinEmbed("Choose Heads or Tails")],
+        components: [getCoinButtons(false)]
+      });
+
+      const collector = initialMsg.createMessageComponentCollector({
+        filter: i => i.user.id === message.author.id,
+        time: 120000 // 2 minutes timeout
+      });
+
+      collector.on('collect', async i => {
+        user = await getUserBalance(userId);
+
+        if (i.customId === 'ct_stop') {
+          collector.stop('manual');
+          const finalEmbed = new EmbedBuilder()
+            .setTitle(`🪙 Coin Toss - Session Finished`)
+            .setColor(0x0099FF)
+            .setDescription(`Session closed.\n💰 **Final Pocket:** ${user.tokens.toLocaleString()}\n📊 **Net Winnings:** ${sessionWinnings >= 0 ? '+' : '-'}${Math.abs(sessionWinnings).toLocaleString()}`);
+          
+          return i.update({ embeds: [finalEmbed], components: [getCoinButtons(true)] });
+        }
+
+        if (i.customId === 'ct_change') {
+          await i.reply({ content: `💡 To change your bet amount, run the command again with your new amount, e.g., \`!cointoss 25000\` or \`!cointoss all\`.`, ephemeral: true });
+          return;
+        }
+
+        if (user.tokens < betAmount) {
+          return i.reply({ content: `❌ You no longer have enough tokens to sustain this bet of **${betAmount.toLocaleString()}**!`, ephemeral: true });
+        }
+
+        const choice = i.customId === 'ct_heads' ? 'Heads' : 'Tails';
+        const outcome = Math.random() < 0.5 ? 'Heads' : 'Tails';
+        const won = choice === outcome;
+
+        if (won) {
+          const profit = betAmount;
+          user.tokens += profit;
+          sessionWinnings += profit;
+          await user.save();
+
+          const resText = `You picked **${choice}**, it landed on **${outcome}** 🎉`;
+          await i.update({ embeds: [generateCoinEmbed(resText, 0x57F287)], components: [getCoinButtons(false)] });
+        } else {
+          user.tokens -= betAmount;
+          sessionWinnings -= betAmount;
+          await user.save();
+
+          const resText = `You picked **${choice}**, it landed on **${outcome}** 💸`;
+          await i.update({ embeds: [generateCoinEmbed(resText, 0xED4245)], components: [getCoinButtons(false)] });
+        }
+      });
+
+      collector.on('end', async (collected, reason) => {
+        if (reason !== 'manual') {
+          try {
+            const timeoutEmbed = generateCoinEmbed("⏱️ Session expired due to inactivity.", 0x808080);
+            await initialMsg.edit({ embeds: [timeoutEmbed], components: [getCoinButtons(true)] });
+          } catch (e) {}
+        }
+      });
     }
 
     // --- COMANDO: !blackjack o !bj ---
@@ -811,7 +842,7 @@ client.on('messageCreate', async (message) => {
 
   } catch (err) {
     console.error("Error ejecutando comando:", err);
-    return message.reply("❌ An internal error occurred while executing this command.").catch(() => {});
+    return message.reply("❌ An internal error occurred while executing this command.");
   }
 });
 
