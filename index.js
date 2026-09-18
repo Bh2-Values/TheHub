@@ -32,6 +32,10 @@ const SCRIPT_URL = "https://raw.githubusercontent.com/BH2-Values/TheHub/main/scr
 // IDs autorizadas para dar y quitar monedas
 const ADMIN_IDS = ['597454574302920716', '689866741702197298'];
 
+// --- CACHÉ PARA EVITAR RATE LIMITS DE GITHUB ---
+let cachedItems = null;
+let lastFetchTime = 0;
+
 // --- CONEXIÓN A MONGODB ---
 if (!MONGO_URI) {
   console.log("⚠️ ADVERTENCIA: No se ha configurado la variable MONGO_URI. Las monedas se perderán al reiniciar.");
@@ -578,7 +582,7 @@ client.on('messageCreate', async (message) => {
           'E-Date Addict', 
           'Absolute Bot'
         ];
-            
+          
         const statuses = [
           'Will Scam You ⚠️', 
           'Broke AF 💸', 
@@ -629,16 +633,26 @@ client.on('messageCreate', async (message) => {
       const query = contentLower.slice(6).trim();
       if (!query) return message.reply("❌ Please provide an item name or mention a user!");
 
-      const res = await fetch(SCRIPT_URL);
-      const text = await res.text();
+      // --- FETCH CON SISTEMA DE CACHÉ PROTEGIDO ---
+      const nowTime = Date.now();
+      if (!cachedItems || (nowTime - lastFetchTime > 5 * 60 * 1000)) {
+        try {
+          const res = await fetch(SCRIPT_URL);
+          const text = await res.text();
 
-      const match = text.match(/const items = (\[[\s\S]*?\]);/);
-      if (!match) return message.reply("Could not parse the database array.");
+          const match = text.match(/const items = (\[[\s\S]*?\]);/);
+          if (!match) return message.reply("Could not parse the database array.");
 
-      const context = {};
-      vm.createContext(context);
-      vm.runInContext(`items = ${match[1]}`, context);
-      const items = context.items;
+          const context = {};
+          vm.createContext(context);
+          vm.runInContext(`items = ${match[1]}`, context);
+          cachedItems = context.items;
+          lastFetchTime = nowTime;
+        } catch (err) {
+          if (!cachedItems) return message.reply("❌ Error al conectar con la base de datos de GitHub.");
+        }
+      }
+      const items = cachedItems;
 
       const foundItem = items.find(i => i.name && i.name.toLowerCase().includes(query));
       if (!foundItem) {
