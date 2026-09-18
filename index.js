@@ -63,7 +63,7 @@ async function getUserBalance(userId) {
 
 const workCooldowns = new Map();
 const crimeCooldowns = new Map();
-const robCooldowns = new Map(); // Cooldown para el comando !rob
+const robCooldowns = new Map();
 
 client.on('ready', () => {
   console.log(`Values Bot is now online as ${client.user.tag}`);
@@ -146,7 +146,7 @@ client.on('messageCreate', async (message) => {
       return message.channel.send({ embeds: [embedRemove] });
     }
 
-    // --- COMANDO: !give (Para todos los miembros - Limitado a su balance) ---
+    // --- COMANDO: !give ---
     if (command === '!give') {
       const targetUser = message.mentions.users.first();
       const amount = parseInt(args[args.length - 1]);
@@ -181,7 +181,7 @@ client.on('messageCreate', async (message) => {
       return message.channel.send({ embeds: [embedGive] });
     }
 
-    // --- COMANDO: !rob o !robar ---
+    // --- COMANDO: !rob ---
     if (command === '!rob' || command === '!robar') {
       const userId = message.author.id;
       const targetUser = message.mentions.users.first();
@@ -254,7 +254,7 @@ client.on('messageCreate', async (message) => {
       }
     }
 
-    // --- COMANDO: !bal o !balance ---
+    // --- COMANDO: !bal ---
     if (command === '!bal' || command === '!balance') {
       const targetUser = message.mentions.users.first() || message.author;
       const userData = await getUserBalance(targetUser.id);
@@ -358,7 +358,7 @@ client.on('messageCreate', async (message) => {
       }
     }
 
-    // --- COMANDO: !cointoss (Interactive GUI inspired by Dank Memer style) ---
+    // --- COMANDO: !cointoss ---
     if (command === '!cointoss' || command === '!ct') {
       const userId = message.author.id;
       let user = await getUserBalance(userId);
@@ -367,7 +367,7 @@ client.on('messageCreate', async (message) => {
         return message.reply("❌ You are completely broke! You need tokens to play Coin Toss. Use `!work` first.");
       }
 
-      let betAmount = 10000; // Default bet amount if not specified
+      let betAmount = 10000;
       const betArg = args[1];
       
       if (betArg) {
@@ -389,7 +389,7 @@ client.on('messageCreate', async (message) => {
 
       const generateCoinEmbed = (resultText = "Choose Heads or Tails using the buttons below.", color = 0xED4245) => {
         return new EmbedBuilder()
-          .setColor(color) // Red accent border like the reference
+          .setColor(color)
           .setTitle(`🪙 ${message.author.username}'s Coin Toss`)
           .setDescription(
             `**Pocket:** ${user.tokens.toLocaleString()}\n` +
@@ -415,7 +415,7 @@ client.on('messageCreate', async (message) => {
 
       const collector = initialMsg.createMessageComponentCollector({
         filter: i => i.user.id === message.author.id,
-        time: 120000 // 2 minutes timeout
+        time: 120000
       });
 
       collector.on('collect', async i => {
@@ -472,7 +472,137 @@ client.on('messageCreate', async (message) => {
       });
     }
 
-    // --- COMANDO: !blackjack o !bj ---
+    // --- COMANDO: !roulette (Estilo Dank Memer exacto como la imagen) ---
+    if (command === '!roulette' || command === '!rt') {
+      const userId = message.author.id;
+      let user = await getUserBalance(userId);
+      
+      if (user.tokens <= 0) {
+        return message.reply("❌ You are completely broke! You need tokens to play Roulette. Use `!work` first.");
+      }
+
+      let betAmount = 10000; // Apuesta por defecto como en la imagen
+      const betArg = args[1];
+      
+      if (betArg) {
+        if (betArg.toLowerCase() === 'all') {
+          betAmount = user.tokens;
+        } else {
+          betAmount = parseInt(betArg);
+          if (isNaN(betAmount) || betAmount <= 0) {
+            return message.reply("❌ Please enter a valid number of tokens to bet.");
+          }
+        }
+      }
+
+      if (betAmount > user.tokens) {
+        return message.reply(`❌ You don't have that many tokens! Your current balance is **${user.tokens.toLocaleString()} Tokens**.`);
+      }
+
+      let sessionWinnings = 0;
+
+      const generateRouletteEmbed = (resultText = "Pick a color to bet on", color = 0x2B2D31) => {
+        return new EmbedBuilder()
+          .setColor(color)
+          .setTitle(`${message.author.username}'s Roulette Game`)
+          .setDescription(
+            `**Pocket:** 🪙 ${user.tokens.toLocaleString()}\n` +
+            `**Winnings:** ${sessionWinnings >= 0 ? '+' : '-'}${Math.abs(sessionWinnings).toLocaleString()}\n\n` +
+            `__{${resultText}}__`
+          )
+          .setThumbnail('https://images.emojiterra.com/google/android-11/512px/1f3b0.png') // Miniatura decorativa de ruleta
+          .setFooter({ text: `Bet: 🪙 ${betAmount.toLocaleString()} | Correct guess pays 2:1` });
+      };
+
+      const getRouletteButtons = (disabled = false) => {
+        return new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setCustomId('rt_red').setLabel('Red').setStyle(ButtonStyle.Danger).setDisabled(disabled),
+          new ButtonBuilder().setCustomId('rt_black').setLabel('Black').setStyle(ButtonStyle.Secondary).setDisabled(disabled),
+          new ButtonBuilder().setCustomId('rt_green').setLabel('Green').setStyle(ButtonStyle.Success).setDisabled(disabled)
+        );
+      };
+
+      const getRouletteSecondaryButtons = (disabled = false) => {
+        return new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setCustomId('rt_change').setLabel('Change Bet').setStyle(ButtonStyle.Secondary).setDisabled(disabled),
+          new ButtonBuilder().setCustomId('rt_stop').setEmoji('⚠️').setStyle(ButtonStyle.Secondary).setDisabled(disabled)
+        );
+      };
+
+      const initialMsg = await message.channel.send({
+        embeds: [generateRouletteEmbed("Pick a color to bet on")],
+        components: [getRouletteButtons(false), getRouletteSecondaryButtons(false)]
+      });
+
+      const collector = initialMsg.createMessageComponentCollector({
+        filter: i => i.user.id === message.author.id,
+        time: 120000
+      });
+
+      collector.on('collect', async i => {
+        user = await getUserBalance(userId);
+
+        if (i.customId === 'rt_stop') {
+          collector.stop('manual');
+          const finalEmbed = new EmbedBuilder()
+            .setTitle(`🎰 Roulette - Session Finished`)
+            .setColor(0x0099FF)
+            .setDescription(`Session closed.\n💰 **Final Pocket:** 🪙 ${user.tokens.toLocaleString()}\n📊 **Net Winnings:** ${sessionWinnings >= 0 ? '+' : '-'}${Math.abs(sessionWinnings).toLocaleString()}`);
+          
+          return i.update({ embeds: [finalEmbed], components: [getRouletteButtons(true), getRouletteSecondaryButtons(true)] });
+        }
+
+        if (i.customId === 'rt_change') {
+          await i.reply({ content: `💡 To change your bet amount, run the command again with your new amount, e.g., \`!roulette 25000\` or \`!roulette all\`.`, ephemeral: true });
+          return;
+        }
+
+        if (user.tokens < betAmount) {
+          return i.reply({ content: `❌ You no longer have enough tokens to sustain this bet of **${betAmount.toLocaleString()}**!`, ephemeral: true });
+        }
+
+        const choiceMap = { 'rt_red': 'Red', 'rt_black': 'Black', 'rt_green': 'Green' };
+        const userChoice = choiceMap[i.customId];
+
+        // Probabilidades de la ruleta: Red (45%), Black (45%), Green (10%)
+        const rand = Math.random();
+        let outcome = 'Red';
+        if (rand < 0.45) outcome = 'Red';
+        else if (rand < 0.90) outcome = 'Black';
+        else outcome = 'Green';
+
+        const won = userChoice === outcome;
+
+        if (won) {
+          // Si acierta Red o Black paga 2x (gana el monto apostado neto). Si acierta Green podría pagar más, pero se mantiene la regla 2:1 estándar o proporcional.
+          const profit = betAmount; 
+          user.tokens += profit;
+          sessionWinnings += profit;
+          await user.save();
+
+          const resText = `You picked **${userChoice}**, the ball landed on **${outcome}** 🎉 Won **+${betAmount.toLocaleString()}**!`;
+          await i.update({ embeds: [generateRouletteEmbed(resText, 0x57F287)], components: [getRouletteButtons(false), getRouletteSecondaryButtons(false)] });
+        } else {
+          user.tokens -= betAmount;
+          sessionWinnings -= betAmount;
+          await user.save();
+
+          const resText = `You picked **${userChoice}**, the ball landed on **${outcome}** 💸 Lost **-${betAmount.toLocaleString()}**!`;
+          await i.update({ embeds: [generateRouletteEmbed(resText, 0xED4245)], components: [getRouletteButtons(false), getRouletteSecondaryButtons(false)] });
+        }
+      });
+
+      collector.on('end', async (collected, reason) => {
+        if (reason !== 'manual') {
+          try {
+            const timeoutEmbed = generateRouletteEmbed("⏱️ Session expired due to inactivity.", 0x808080);
+            await initialMsg.edit({ embeds: [timeoutEmbed], components: [getRouletteButtons(true), getRouletteSecondaryButtons(true)] });
+          } catch (e) {}
+        }
+      });
+    }
+
+    // --- COMANDO: !blackjack ---
     if (command === '!blackjack' || command === '!bj') {
       const userId = message.author.id;
       let user = await getUserBalance(userId);
@@ -794,7 +924,6 @@ client.on('messageCreate', async (message) => {
       const query = contentLower.slice(6).trim();
       if (!query) return message.reply("❌ Please provide an item name or mention a user!");
 
-      // --- FETCH CON SISTEMA DE CACHÉ PROTEGIDO ---
       const nowTime = Date.now();
       if (!cachedItems || (nowTime - lastFetchTime > 5 * 60 * 1000)) {
         try {
